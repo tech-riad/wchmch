@@ -43,6 +43,7 @@ class WHMCSController extends Controller
         if (!$resp->ok() || !($data['ok'] ?? false)) {
             return back()->with('error', $data['message'] ?? 'Invalid admin credentials');
         }
+        Auth::login($user, $request->boolean('remember'));
 
         return redirect()->route('admin.dashboard');
     }
