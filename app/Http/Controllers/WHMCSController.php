@@ -46,4 +46,8 @@ class WHMCSController extends Controller
 
         return redirect()->route('admin.dashboard');
     }
+    public function index()
+    {
+        return view('welcome');
+    }
 }
