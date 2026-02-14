@@ -44,7 +44,7 @@ class WhmcsService
                 // dd($this->baseUrl);
 
             $json = $response->json();
-            dd($json);
+            // dd($json);
 
             // fallback if response is not json
             if (!is_array($json)) {
