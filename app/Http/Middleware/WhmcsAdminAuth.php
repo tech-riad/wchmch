@@ -10,7 +10,7 @@ class WhmcsAdminAuth
     public function handle(Request $request, Closure $next)
     {
         if (!auth()->check()) {
-            return redirect()->route('admin.login.form')
+            return redirect()->route('login.whmcs')
                 ->with('error', 'Please login first');
         }
 

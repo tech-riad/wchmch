@@ -8,7 +8,7 @@ Route::get('/', function () {
 });
 Route::get('/admin', function () {
     return view('backend.login');
-});
+})->name('login');
 // Route::get('/whmcs/test', [WHMCSController::class, 'test'])->name('admin.dashboard');
 
 
@@ -16,6 +16,6 @@ Route::any('/login-whmcs', [WHMCSController::class, 'login'])->name('login.whmcs
 
 
 // Route::any('/dashboard', [WHMCSController::class, 'index'])->name('admin.dashboard');
-Route::middleware(['web', 'auth', 'whmcsAdmin'])->group(function () {
+Route::middleware(['web', 'auth','whmcsAdmin'])->group(function () {
     Route::any('/dashboard', [WHMCSController::class, 'index'])->name('admin.dashboard');
 });

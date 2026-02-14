@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Services\WhmcsService;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth as FacadesAuth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 
 class WHMCSController extends Controller
@@ -17,7 +20,6 @@ class WHMCSController extends Controller
     }
     public function login(Request $request)
     {
-        // dd('login attempt');
         $request->validate([
             'login' => 'required',
             'password' => 'required',
@@ -34,21 +36,32 @@ class WHMCSController extends Controller
                 'password' => $request->password,
             ]);
 
-        // dd($resp->status(), $resp->body());
-
         $data = $resp->json();
 
-        // dd($data);
-
         if (!$resp->ok() || !($data['ok'] ?? false)) {
-            return back()->with('error', $data['message'] ?? 'Invalid admin credentials');
+            return redirect()->back()->with('error', $data['message'] ?? 'Invalid')->withInput();
         }
-        Auth::login($user, $request->boolean('remember'));
+
+        $email = $data['email'] ?? ($data['username'] . '@whmcs-admin.local');
+
+        $user = \App\Models\User::updateOrCreate(
+            ['email' => $email],
+            [
+                'name' => $data['name'] ?: $data['username'],
+                'password' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(40)),
+                'is_admin' => 1,
+                'whmcs_admin_id' => $data['admin_id'] ?? null,
+            ]
+        );
+
+        \Illuminate\Support\Facades\Auth::login($user);
+        $request->session()->regenerate();
 
         return redirect()->route('admin.dashboard');
     }
     public function index()
     {
+        // dd('here');
         return view('welcome');
     }
 }
