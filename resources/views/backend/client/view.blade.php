@@ -611,7 +611,7 @@
                         >
                       </li>
                       <li class="nav-item">
-                        <a class="nav-link" href="pages-profile-teams.html"
+                        <a class="nav-link" href="{{route('admin.users.edit', $client['id'])}}"
                           ><i class="icon-base ti tabler-users icon-sm me-1_5"></i> Teams</a
                         >
                       </li>

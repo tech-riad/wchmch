@@ -25,5 +25,7 @@ Route::middleware(['web', 'auth','whmcsAdmin'])->group(function () {
     Route::get('/users/create', [ClientController::class, 'create'])->name('admin.users.create');
     Route::post('/users/store', [ClientController::class, 'store'])->name('admin.users.store');
     Route::get('/users/details', [ClientController::class, 'details'])->name('admin.users.details');
+    Route::get('/users/edit/{id}', [ClientController::class, 'edit'])->name('admin.users.edit');
+    Route::put('/users/update/{id}', [ClientController::class, 'update'])->name('admin.users.update');
 
 });

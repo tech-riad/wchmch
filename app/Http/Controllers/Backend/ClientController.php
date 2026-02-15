@@ -174,4 +174,52 @@ class ClientController extends Controller
         return view('backend.client.view', ['client' => $resp['client'] ?? []]);
     }
 
+    public function edit(WhmcsService $whmcs, $id)
+    {
+        // dd($id);
+        $resp = $whmcs->call('GetClientsDetails', [
+            'clientid' => $id,
+        ]);
+
+        if (($resp['result'] ?? '') !== 'success') {
+            return back()->with('error', $resp['message'] ?? 'Failed to fetch client details');
+        }
+
+        $currencyApi = $whmcs->call('GetCurrencies', [
+            'limitstart' => 0,
+            'limitnum'   => 50,
+        ]);
+
+        // Fix: Use $currencyApi instead of $currency
+        $currencies = $currencyApi['currencies']['currency'] ?? [];
+
+        $groupApi = $whmcs->call('GetClientGroups', [
+            'limitstart' => 0,
+            'limitnum'   => 50,
+        ]);
+
+        // dd($groupApi);
+        $groups = $groupApi['groups']['group'] ?? [];
+        // dd($groups);
+        // Payment method API call
+        $paymentMethodApi = $whmcs->call('GetPaymentMethods', [
+            'limitstart' => 0,
+            'limitnum'   => 50,
+        ]);
+        // dd($paymentMethodApi);
+
+        // dd($paymentMethodApi);
+        $paymethodMethods = $paymentMethodApi['paymentmethods']['paymentmethod']?? [];
+
+        // dd($resp['client']);
+        // dd($paymethodMethods);
+        return view('backend.client.edit', [
+            'client' => $resp['client'] ?? [],
+            'currencies' => $currencies,
+            'groups' => $groups,
+            'paymentMethods' => $paymethodMethods,
+        ]);
+
+    }
+
 }
