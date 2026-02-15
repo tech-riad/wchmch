@@ -856,41 +856,61 @@
 
                                     @php
                                     $emailKeys = [
-                                    'generalemails' => 'General Emails',
-                                    'invoiceemails' => 'Invoice Emails',
-                                    'supportemails' => 'Support Emails',
-                                    'productemails' => 'Product Emails',
-                                    'domainemails' => 'Domain Emails',
-                                    'affiliateemails' => 'Affiliate Emails',
+                                        'generalemails'   => 'General Emails',
+                                        'invoiceemails'   => 'Invoice Emails',
+                                        'supportemails'   => 'Support Emails',
+                                        'productemails'   => 'Product Emails',
+                                        'domainemails'    => 'Domain Emails',
+                                        'affiliateemails' => 'Affiliate Emails',
                                     ];
-
                                     @endphp
 
                                     @foreach($emailKeys as $key => $label)
-                                    @php
-                                    $defaultChecked = !empty($client[$key]);
 
-                                    $oldVal = old($key, null);
-                                    if ($oldVal !== null) {
-                                    $defaultChecked = in_array($oldVal, [1,'1',true,'true','on'], true);
-                                    }
-                                    @endphp
+                                        @php
+                                        /*
+                                        |--------------------------------------------------------------------------
+                                        | ✅ মূল selected value
+                                        |--------------------------------------------------------------------------
+                                        */
+                                        $defaultChecked = false;
 
-                                    <div class="col-md-6 mb-1">
-                                        <div class="form-check form-switch">
+                                        // 1️⃣ old() থাকলে সেটাই priority
+                                        if (old($key) !== null) {
+                                            $defaultChecked = in_array(old($key), [1, '1', true, 'true', 'on'], true);
+                                        }
+                                        // 2️⃣ না হলে selectedContact থেকে
+                                        elseif (!empty($selectedContact)) {
+                                            $defaultChecked = !empty($selectedContact[$key]);
+                                        }
+                                        // 3️⃣ fallback → client (optional)
+                                        elseif (!empty($client)) {
+                                            $defaultChecked = !empty($client[$key]);
+                                        }
+                                        @endphp
 
-                                            <input type="hidden" name="{{ $key }}" value="0">
+                                        <div class="col-md-6 mb-1">
+                                            <div class="form-check form-switch">
 
-                                            <input class="form-check-input" type="checkbox" id="email_{{ $key }}"
-                                                name="{{ $key }}" value="1" {{ $defaultChecked ? 'checked' : '' }}>
+                                                <input type="hidden" name="{{ $key }}" value="0">
 
-                                            <label class="form-check-label" for="email_{{ $key }}">
-                                                {{ $label }}
-                                            </label>
+                                                <input class="form-check-input"
+                                                    type="checkbox"
+                                                    id="email_{{ $key }}"
+                                                    name="{{ $key }}"
+                                                    value="1"
+                                                    {{ $defaultChecked ? 'checked' : '' }}>
 
+                                                <label class="form-check-label" for="email_{{ $key }}">
+                                                    {{ $label }}
+                                                </label>
+
+                                            </div>
                                         </div>
-                                    </div>
+
                                     @endforeach
+
+                                    
 
                                 </div>
                             </div>
