@@ -930,45 +930,113 @@
                             <div class="row g-3">
 
                                 @php
-                                    $prefs = $client['email_preferences'] ?? [];
+                                $prefs = $client['email_preferences'] ?? [];
+                                @endphp
+
+                                <div class="row">
+                                    @foreach(['general','invoice','support','product','domain','affiliate'] as $p)
+                                    <div class="col-md-6 mb-1">
+                                        <div class="form-check form-switch">
+                                            <input type="hidden" name="email_preferences[{{ $p }}]" value="0">
+
+                                            <input class="form-check-input" type="checkbox" id="email_pref_{{ $p }}"
+                                                name="email_preferences[{{ $p }}]" value="1"
+                                                {{ old("email_preferences.$p", (int)($prefs[$p] ?? 0)) ? 'checked' : '' }}>
+
+                                            <label class="form-check-label" for="email_pref_{{ $p }}">
+                                                {{ ucfirst($p) }} Emails
+                                            </label>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+
+
+                            </div>
+                        </div>
+                    </div>
+                    @php
+                    $labels = [
+                    'latefeeoveride' => 'Late Fees',
+                    'overideduenotices' => 'Overdue Notices',
+                    'emailoptout' => 'Status Update',
+
+                    'separateinvoices' => 'Separate Invoices',
+                    'disableautocc' => 'Disable CC Processing',
+                    'allowSingleSignOn' => 'Allow Single Sign-On',
+                    'taxexempt' => 'Tax Exempt',
+                    'marketing_emails_opt_in'=> 'Marketing Emails Opt-in',
+                    ];
+
+                    // এগুলো WHMCS API তে inverse type
+                    $inverse = ['latefeeoveride','overideduenotices','emailoptout'];
+
+                    $defaults = [
+                    'latefeeoveride' => (bool)($client['latefeeoveride'] ?? false),
+                    'overideduenotices' => (bool)($client['overideduenotices'] ?? false),
+                    'emailoptout' => (bool)($client['emailoptout'] ?? false),
+
+                    'separateinvoices' => (bool)($client['separateinvoices'] ?? false),
+                    'disableautocc' => (bool)($client['disableautocc'] ?? false),
+                    'taxexempt' => (bool)($client['taxexempt'] ?? false),
+                    'marketing_emails_opt_in' => (bool)($client['marketing_emails_opt_in'] ?? false),
+                    'allowSingleSignOn' => (int)($client['allowSingleSignOn'] ?? 0),
+                    ];
+
+                    function oldBool($key, $default) {
+                    $v = old($key, null);
+                    if ($v === null) return (bool)$default;
+                    return in_array($v, [1,'1',true,'true','on'], true);
+                    }
+                    @endphp
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="ti ti-toggle-left me-2"></i>Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                @foreach($labels as $field => $label)
+
+                                @php
+                                // UI তে checked হবে:
+                                // inverse field হলে !value
+                                $raw = ($field === 'allowSingleSignOn')
+                                ? (int) old($field, $defaults[$field])
+                                : oldBool($field, $defaults[$field]);
+
+                                $uiChecked = in_array($field, $inverse, true) ? !$raw : (bool)$raw;
                                 @endphp
 
                                 <div class="col-md-6">
                                     <div class="form-check form-switch">
 
-                                        {{-- ✅ unchecked হলে 0 যাবে --}}
-                                        <input type="hidden" name="email_preferences[general]" value="0">
+                                        {{-- hidden always --}}
+                                        @if($field === 'allowSingleSignOn')
+                                        <input type="hidden" name="{{ $field }}" value="0">
+                                        <input class="form-check-input" type="checkbox" id="toggle_{{ $field }}"
+                                            name="{{ $field }}" value="1" {{ $uiChecked ? 'checked' : '' }}>
+                                        @else
+                                        <input type="hidden" name="{{ $field }}" value="0">
+                                        <input class="form-check-input" type="checkbox" id="toggle_{{ $field }}"
+                                            name="{{ $field }}" value="1" {{ $uiChecked ? 'checked' : '' }}>
+                                        @endif
 
-                                        <input class="form-check-input" type="checkbox" id="email_pref_general"
-                                            name="email_preferences[general]" value="1"
-                                            {{ old('email_preferences.general', (int)($prefs['general'] ?? 0)) ? 'checked' : '' }}>
-
-                                        <label class="form-check-label" for="email_pref_general">
-                                            General Emails
-                                        </label>
+                                        <label class="form-check-label" for="toggle_{{ $field }}">{{ $label }}</label>
                                     </div>
                                 </div>
 
-
-                                <div class="col-md-6">
-                                    <div class="form-check form-switch">
-
-                                        {{-- ✅ unchecked হলে 0 যাবে --}}
-                                        <input type="hidden" name="email_preferences[invoice]" value="0">
-
-                                        <input class="form-check-input" type="checkbox" id="email_pref_invoice"
-                                            name="email_preferences[invoice]" value="1"
-                                            {{ old('email_preferences.invoice', (int)($prefs['invoice'] ?? 0)) ? 'checked' : '' }}>
-
-                                        <label class="form-check-label" for="email_pref_invoice">
-                                            Invoice Emails
-                                        </label>
-                                    </div>
-                                </div>
-
+                                @endforeach
                             </div>
+
+
                         </div>
                     </div>
+
+
+
 
                     {{-- Additional Notes Card --}}
                     <div class="card mb-4">

@@ -174,7 +174,7 @@ class ClientController extends Controller
         return view('backend.client.view', ['client' => $resp['client'] ?? []]);
     }
 
-    public function edit(WhmcsService $whmcs, $id)
+    public function edit(WhmcsService $whmcs, $id, Request $request)
     {
         // dd($id);
         $resp = $whmcs->call('GetClientsDetails', [
@@ -225,12 +225,11 @@ class ClientController extends Controller
 
     public function update(WhmcsService $whmcs, Request $request, $id)
     {
-        // dd($request->all(), $id);
-        // ✅ Validation (যেগুলো তুমি edit ফর্মে পাঠাচ্ছ)
-        $validated = $request->validate([
+        $request->validate([
             'firstname'   => 'required|string|max:255',
             'lastname'    => 'required|string|max:255',
             'companyname' => 'nullable|string|max:255',
+            'email'       => 'nullable|email|max:255',
 
             'phone'       => 'nullable|string|max:30',
             'address1'    => 'nullable|string|max:255',
@@ -239,71 +238,110 @@ class ClientController extends Controller
             'state'       => 'nullable|string|max:255',
             'postcode'    => 'nullable|string|max:30',
             'country'     => 'nullable|string|max:2',
-
             'tax_id'      => 'nullable|string|max:100',
-            'currency'    => 'nullable|string|max:10',
-            'group'       => 'nullable|integer',
-            'status'      => 'nullable|in:Active,Inactive,Closed',
+            'notes'       => 'nullable|string',
 
+            'currency'       => 'nullable|integer',
+            'group'          => 'nullable|integer',
+            'status'         => 'nullable|in:Active,Inactive,Closed',
             'payment_method' => 'nullable|string|max:50',
-            'notes'          => 'nullable|string',
 
+            'email_preferences'   => 'nullable|array',
+            'email_preferences.*' => 'nullable|in:0,1',
 
+            'taxexempt'              => 'nullable|in:0,1',
+            'latefeeoveride'         => 'nullable|in:0,1',
+            'overideduenotices'      => 'nullable|in:0,1',
+            'separateinvoices'       => 'nullable|in:0,1',
+            'disableautocc'          => 'nullable|in:0,1',
+            'emailoptout'            => 'nullable|in:0,1',
+            'marketing_emails_opt_in'=> 'nullable|in:0,1',
+            'overrideautoclose'      => 'nullable|in:0,1',
+            'allowSingleSignOn'      => 'nullable|in:0,1',
         ]);
 
         $postData = [
             'clientid'    => (int) $id,
-            'firstname'   => $validated['firstname'],
-            'lastname'    => $validated['lastname'],
-            'companyname' => $validated['companyname'] ?? '',
+            'firstname'   => $request->input('firstname'),
+            'lastname'    => $request->input('lastname'),
+            'companyname' => $request->input('companyname', ''),
         ];
 
-        if (!empty($validated['phone'])) {
-            $postData['phonenumber'] = $validated['phone'];
+        // Optional basics
+        if ($request->filled('email')) {
+            $postData['email'] = $request->input('email');
+        }
+        if ($request->filled('phone')) {
+            $postData['phonenumber'] = $request->input('phone');
         }
 
         foreach (['address1','address2','city','state','postcode','country','tax_id','notes'] as $f) {
-            if (!empty($validated[$f])) {
-                $postData[$f] = $validated[$f];
+            if ($request->filled($f)) {
+                $postData[$f] = $request->input($f);
             }
         }
 
-        $prefs = ['general','invoice','product','domain','support','affiliate'];
+        if ($request->filled('currency')) {
+            $postData['currency'] = (int) $request->input('currency');
+        }
+        if ($request->filled('group')) {
+            $postData['groupid'] = (int) $request->input('group');
+        }
+        if ($request->filled('status')) {
+            $postData['status'] = $request->input('status');
+        }
+        if ($request->filled('payment_method')) {
+            $postData['paymentmethod'] = $request->input('payment_method');
+        }
 
-        // dd($request->all(), $postData);
-        foreach ($prefs as $p) {
-            if ($request->has("email_preferences.$p")) {
-                $postData["email_preferences[$p]"] = $request->input("email_preferences.$p");
+        foreach (['general','invoice','support','product','domain','affiliate'] as $k) {
+            if ($request->has("email_preferences.$k")) {
+                $postData["email_preferences[$k]"] = (string) $request->input("email_preferences.$k");
             }
         }
 
-        if (!empty($validated['currency'])) {
-            $postData['currency'] = $validated['currency'];
-        }
+        $inverseFields = ['latefeeoveride', 'overideduenotices', 'emailoptout'];
 
-        if (!empty($validated['group'])) {
-            $postData['groupid'] = (int) $validated['group'];
-        }
+        $toggleFields = [
+            'taxexempt',
+            'latefeeoveride',
+            'overideduenotices',
+            'separateinvoices',
+            'disableautocc',
+            'emailoptout',
+            'marketing_emails_opt_in',
+            'overrideautoclose',
+            'allowSingleSignOn',
+        ];
 
-        if (!empty($validated['status'])) {
-            $postData['status'] = $validated['status'];
-        }
+        foreach ($toggleFields as $k) {
+            if ($request->has($k)) {
+                $enabled = (string)$request->input($k);
+                $boolEnabled = in_array($enabled, ['1', 1, true, 'true', 'on'], true);
 
-        if (!empty($validated['payment_method'])) {
-            $postData['paymentmethod'] = $validated['payment_method'];
+
+                if (in_array($k, $inverseFields, true)) {
+                    $boolEnabled = !$boolEnabled;
+                }
+
+                $postData[$k] = $boolEnabled ? '1' : '0';
+            }
         }
 
         $resp = $whmcs->call('UpdateClient', $postData);
 
         if (!is_array($resp) || ($resp['result'] ?? '') !== 'success') {
-            $msg = $resp['message'] ?? 'WHMCS update failed';
-            return back()->withErrors(['whmcs' => $msg])->withInput();
+            return back()->withErrors(['whmcs' => $resp['message'] ?? 'WHMCS update failed'])->withInput();
         }
 
-        return redirect()
-            ->back()
-            ->with('success', 'Client updated successfully');
+
+        return back()->with([
+            'success' => 'Client updated successfully'
+        ]);
     }
+
+
+
 
 
 }
