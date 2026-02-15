@@ -603,27 +603,32 @@
                                 <div class="card-body">
                                     <div class="context-btn-container">
                                         <div class="text-left">
-                                            <form action="{{ route('admin.users.contact', $client['id']) }}" method="get">
-                                            <input type="hidden" name="userid" value="{{ $client['id'] }}">
+                                            <form action="{{ route('admin.users.contact', $client['id']) }}"
+                                                method="get">
+                                                <input type="hidden" name="userid" value="{{ $client['id'] }}">
 
-                                            Contacts:
-                                            <select name="contactid" onchange="this.form.submit()" class="form-control select-inline">
-                                                <option value="addnew" {{ ($selectedContactId === 'addnew') ? 'selected' : '' }}>
-                                                    Add New
-                                                </option>
-
-                                                @foreach ($contacts as $item)
-                                                    @php $cid = (int)($item['id'] ?? $item['contactid'] ?? 0); @endphp
-                                                    <option value="{{ $cid }}" {{ ((string)$selectedContactId === (string)$cid) ? 'selected' : '' }}>
-                                                        {{ $item['firstname'] }} {{ $item['lastname'] }} - {{ $item['email'] }}
+                                                Contacts:
+                                                <select name="contactid" onchange="this.form.submit()"
+                                                    class="form-control select-inline">
+                                                    <option value="addnew"
+                                                        {{ ($selectedContactId === 'addnew') ? 'selected' : '' }}>
+                                                        Add New
                                                     </option>
-                                                @endforeach
-                                            </select>
 
-                                            <noscript>
-                                                <input type="submit" value="Go" class="btn btn-default" />
-                                            </noscript>
-                                        </form>
+                                                    @foreach ($contacts as $item)
+                                                    @php $cid = (int)($item['id'] ?? $item['contactid'] ?? 0); @endphp
+                                                    <option value="{{ $cid }}"
+                                                        {{ ((string)$selectedContactId === (string)$cid) ? 'selected' : '' }}>
+                                                        {{ $item['firstname'] }} {{ $item['lastname'] }} -
+                                                        {{ $item['email'] }}
+                                                    </option>
+                                                    @endforeach
+                                                </select>
+
+                                                <noscript>
+                                                    <input type="submit" value="Go" class="btn btn-default" />
+                                                </noscript>
+                                            </form>
 
                                         </div>
                                     </div>
@@ -655,11 +660,9 @@
                                                         class="text-danger">*</span></label>
                                                 <input type="text"
                                                     class="form-control @error('firstname') is-invalid @enderror"
-                                                    id="firstname"
-                                                    name="firstname"
+                                                    id="firstname" name="firstname"
                                                     value="{{ old('firstname', $selectedContact['firstname'] ?? '') }}"
-                                                    placeholder="Enter first name"
-                                                    required>
+                                                    placeholder="Enter first name" required>
 
 
                                                 @error('firstname')
@@ -672,11 +675,9 @@
                                                         class="text-danger">*</span></label>
                                                 <input type="text"
                                                     class="form-control @error('lastname') is-invalid @enderror"
-                                                    id="lastname"
-                                                    name="lastname"
+                                                    id="lastname" name="lastname"
                                                     value="{{ old('lastname', $selectedContact['lastname'] ?? '') }}"
-                                                    placeholder="Enter last name"
-                                                    required>
+                                                    placeholder="Enter last name" required>
 
                                                 @error('lastname')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -700,12 +701,26 @@
                                                         class="text-danger">*</span></label>
                                                 <input type="email"
                                                     class="form-control @error('email') is-invalid @enderror" id="email"
-                                                    name="email" value="{{ old('email', $selectedContact['email'] ?? '') }}"
+                                                    name="email"
+                                                    value="{{ old('email', $selectedContact['email'] ?? '') }}"
                                                     placeholder="Enter email address" required>
                                                 @error('email')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label" for="phone">Phone <span
+                                                        class="text-danger">*</span></label>
+                                                <input type="tel"
+                                                    class="form-control @error('phone') is-invalid @enderror" id="phone"
+                                                    name="phone"
+                                                    value="{{ old('phone', $selectedContact['phonenumber'] ?? '') }}"
+                                                    placeholder="Enter phone number" required>
+                                                @error('phone')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
                                         </div>
                                     </div>
                                 </div>
@@ -749,7 +764,8 @@
                                                         class="text-danger">*</span></label>
                                                 <input type="text"
                                                     class="form-control @error('city') is-invalid @enderror" id="city"
-                                                    name="city" value="{{ old('city', $selectedContact['city'] ?? '') }}"
+                                                    name="city"
+                                                    value="{{ old('city', $selectedContact['city'] ?? '') }}"
                                                     placeholder="Enter city" required>
                                                 @error('city')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -761,7 +777,8 @@
                                                         class="text-danger">*</span></label>
                                                 <input type="text"
                                                     class="form-control @error('state') is-invalid @enderror" id="state"
-                                                    name="state" value="{{ old('state', $selectedContact['state'] ?? '') }}"
+                                                    name="state"
+                                                    value="{{ old('state', $selectedContact['state'] ?? '') }}"
                                                     placeholder="Enter state or region" required>
                                                 @error('state')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -815,130 +832,140 @@
                                                     class="form-control @error('tax_id') is-invalid @enderror"
                                                     id="tax_id" name="tax_id"
                                                     value="{{ old('tax_id', $selectedContact['tax_id'] ?? '') }}"
-                                                    placeholder="Enter tax ID (optional)">
-                                                @error('tax_id')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div> --}}
-                                        </div>
+                                            placeholder="Enter tax ID (optional)">
+                                            @error('tax_id')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div> --}}
                                     </div>
                                 </div>
-
-                                {{-- Account Settings Card --}}
-
-                                {{-- @php
-                                $prefs = $client['email_preferences'] ?? [];
-                                @endphp
-
-                                <div class="card mb-4">
-                                    <div class="card-header">
-                                        <h5 class="card-title mb-0">
-                                            <i class="ti ti-mail me-2"></i>Email Preferences
-                                        </h5>
-                                    </div>
-
-                                    <div class="card-body">
-                                        <div class="row g-3">
-
-                                            @php
-                                            $prefs = $client['email_preferences'] ?? [];
-                                            @endphp
-
-                                            <div class="row">
-                                                @foreach(['general','invoice','support','product','domain','affiliate']
-                                                as $p)
-                                                <div class="col-md-6 mb-1">
-                                                    <div class="form-check form-switch">
-                                                        <input type="hidden" name="email_preferences[{{ $p }}]"
-                                                            value="0">
-
-                                                        <input class="form-check-input" type="checkbox"
-                                                            id="email_pref_{{ $p }}" name="email_preferences[{{ $p }}]"
-                                                            value="1"
-                                                            {{ old("email_preferences.$p", (int)($prefs[$p] ?? 0)) ? 'checked' : '' }}>
-
-                                                        <label class="form-check-label" for="email_pref_{{ $p }}">
-                                                            {{ ucfirst($p) }} Emails
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                                @endforeach
-                                            </div>
-
-
-                                        </div>
-                                    </div>
-                                </div> --}}
-
-
-
-
-
-
-                                {{-- Form Actions --}}
-                                <div class="d-flex justify-content-end gap-2 mb-5">
-                                    <button type="reset" class="btn btn-outline-secondary">
-                                        <i class="ti ti-refresh me-1"></i> Reset
-                                    </button>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="ti ti-device-floppy me-1"></i> Save Client
-                                    </button>
-                                    <button type="button" class="btn btn-outline-primary" onclick="saveAndContinue()">
-                                        <i class="ti ti-device-floppy me-1"></i> Save & Add Another
-                                    </button>
-                                </div>
-                            </form>
-
                         </div>
+
+                        {{-- Account Settings Card --}}
+
+
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="ti ti-mail me-2"></i>Email Notifications
+                                </h5>
+                            </div>
+
+                            <div class="card-body">
+                                <div class="row g-3">
+
+                                    @php
+                                    $emailKeys = [
+                                    'generalemails' => 'General Emails',
+                                    'invoiceemails' => 'Invoice Emails',
+                                    'supportemails' => 'Support Emails',
+                                    'productemails' => 'Product Emails',
+                                    'domainemails' => 'Domain Emails',
+                                    'affiliateemails' => 'Affiliate Emails',
+                                    ];
+
+                                    @endphp
+
+                                    @foreach($emailKeys as $key => $label)
+                                    @php
+                                    $defaultChecked = !empty($client[$key]);
+
+                                    $oldVal = old($key, null);
+                                    if ($oldVal !== null) {
+                                    $defaultChecked = in_array($oldVal, [1,'1',true,'true','on'], true);
+                                    }
+                                    @endphp
+
+                                    <div class="col-md-6 mb-1">
+                                        <div class="form-check form-switch">
+
+                                            <input type="hidden" name="{{ $key }}" value="0">
+
+                                            <input class="form-check-input" type="checkbox" id="email_{{ $key }}"
+                                                name="{{ $key }}" value="1" {{ $defaultChecked ? 'checked' : '' }}>
+
+                                            <label class="form-check-label" for="email_{{ $key }}">
+                                                {{ $label }}
+                                            </label>
+
+                                        </div>
+                                    </div>
+                                    @endforeach
+
+                                </div>
+                            </div>
+                        </div>
+
+
+
+
+
+
+
+                        {{-- Form Actions --}}
+                        <div class="d-flex justify-content-end gap-2 mb-5">
+                            <button type="reset" class="btn btn-outline-secondary">
+                                <i class="ti ti-refresh me-1"></i> Reset
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ti ti-device-floppy me-1"></i> Save Client
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="saveAndContinue()">
+                                <i class="ti ti-device-floppy me-1"></i> Save & Add Another
+                            </button>
+                        </div>
+                        </form>
+
                     </div>
-                    <!--/ User Profile Content -->
                 </div>
-                <!-- / Content -->
+                <!--/ User Profile Content -->
+            </div>
+            <!-- / Content -->
 
-                <!-- Footer -->
-                <footer class="content-footer footer bg-footer-theme">
-                    <div class="container-xxl">
-                        <div
-                            class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
-                            <div class="text-body">
-                                &#169;
-                                <script>
-                                    document.write(new Date().getFullYear());
+            <!-- Footer -->
+            <footer class="content-footer footer bg-footer-theme">
+                <div class="container-xxl">
+                    <div
+                        class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
+                        <div class="text-body">
+                            &#169;
+                            <script>
+                                document.write(new Date().getFullYear());
 
-                                </script>
-                                , made with ❤️ by <a href="https://pixinvent.com" target="_blank"
-                                    class="footer-link">Pixinvent</a>
-                            </div>
-                            <div class="d-none d-lg-inline-block">
-                                <a href="https://themeforest.net/licenses/standard" class="footer-link me-4"
-                                    target="_blank">License</a>
-                                <a href="https://themeforest.net/user/pixinvent/portfolio" target="_blank"
-                                    class="footer-link me-4">More Themes</a>
+                            </script>
+                            , made with ❤️ by <a href="https://pixinvent.com" target="_blank"
+                                class="footer-link">Pixinvent</a>
+                        </div>
+                        <div class="d-none d-lg-inline-block">
+                            <a href="https://themeforest.net/licenses/standard" class="footer-link me-4"
+                                target="_blank">License</a>
+                            <a href="https://themeforest.net/user/pixinvent/portfolio" target="_blank"
+                                class="footer-link me-4">More Themes</a>
 
-                                <a href="https://demos.pixinvent.com/vuexy-html-admin-template/documentation/"
-                                    target="_blank" class="footer-link me-4">Documentation</a>
+                            <a href="https://demos.pixinvent.com/vuexy-html-admin-template/documentation/"
+                                target="_blank" class="footer-link me-4">Documentation</a>
 
-                                <a href="https://pixinvent.ticksy.com/" target="_blank"
-                                    class="footer-link d-none d-sm-inline-block">Support</a>
-                            </div>
+                            <a href="https://pixinvent.ticksy.com/" target="_blank"
+                                class="footer-link d-none d-sm-inline-block">Support</a>
                         </div>
                     </div>
-                </footer>
-                <!-- / Footer -->
+                </div>
+            </footer>
+            <!-- / Footer -->
 
-                <div class="content-backdrop fade"></div>
-            </div>
-
-            <!-- Content wrapper -->
+            <div class="content-backdrop fade"></div>
         </div>
-        <!-- / Layout page -->
+
+        <!-- Content wrapper -->
     </div>
+    <!-- / Layout page -->
+</div>
 
-    <!-- Overlay -->
-    <div class="layout-overlay layout-menu-toggle"></div>
+<!-- Overlay -->
+<div class="layout-overlay layout-menu-toggle"></div>
 
-    <!-- Drag Target Area To SlideIn Menu On Small Screens -->
-    <div class="drag-target"></div>
+<!-- Drag Target Area To SlideIn Menu On Small Screens -->
+<div class="drag-target"></div>
 </div>
 
 

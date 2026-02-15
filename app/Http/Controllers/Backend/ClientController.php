@@ -363,31 +363,24 @@ class ClientController extends Controller
         }
 
         $contacts = $resp['contacts']['contact'] ?? [];
-
-        // selected contact id from query: ?contactid=...
         $contactid = $request->query('contactid');
 
-        // Decide default selection
         $selectedContactId = null;
         if ($contactid === 'addnew' || empty($contacts)) {
             $selectedContactId = 'addnew';
         } elseif (!empty($contactid)) {
             $selectedContactId = (int)$contactid;
         } else {
-            // no query, has contacts => select first
             $first = $contacts[0] ?? null;
             $selectedContactId = $first ? (int)($first['id'] ?? $first['contactid'] ?? 0) : 'addnew';
         }
 
-        // Load selected contact details for form (if not addnew)
         $selectedContact = [];
         if ($selectedContactId !== 'addnew' && !empty($selectedContactId)) {
-            // Try to get full details (WHMCS action name may vary)
             $detailResp = $whmcs->call('GetContactDetails', [
                 'contactid' => (int)$selectedContactId,
             ]);
 
-            // fallback: if GetContactDetails not available, fill from list item
             $selectedContact = $detailResp['contact'] ?? [];
 
             if (empty($selectedContact)) {
@@ -404,8 +397,8 @@ class ClientController extends Controller
         return view('backend.client.contact.index', [
             'contacts' => $contacts,
             'client' => $client,
-            'selectedContactId' => $selectedContactId,   // 'addnew' OR int id
-            'selectedContact' => $selectedContact,       // array (blank if addnew)
+            'selectedContactId' => $selectedContactId,
+            'selectedContact' => $selectedContact,
         ]);
     }
 
@@ -432,6 +425,12 @@ class ClientController extends Controller
             'postcode'     => $request->input('postcode'),
             'country'     => $request->input('country'),
             'companyname'     => $request->input('companyname'),
+            'domainemails'     => $request->input('domainemails'),
+            'generalemails'     => $request->input('generalemails'),
+            'invoiceemails'     => $request->input('invoiceemails'),
+            'productemails'     => $request->input('productemails'),
+            'supportemails'     => $request->input('supportemails'),
+            'affiliateemails'     => $request->input('affiliateemails'),
 
         ];
 
