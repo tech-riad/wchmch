@@ -598,12 +598,48 @@
 
                     <!-- User Profile Content -->
                     <div class="row">
+                        <div class="card mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="context-btn-container">
+                                        <div class="text-left">
+                                            <form action="{{ route('admin.users.contact', $client['id']) }}" method="get">
+                                            <input type="hidden" name="userid" value="{{ $client['id'] }}">
+
+                                            Contacts:
+                                            <select name="contactid" onchange="this.form.submit()" class="form-control select-inline">
+                                                <option value="addnew" {{ ($selectedContactId === 'addnew') ? 'selected' : '' }}>
+                                                    Add New
+                                                </option>
+
+                                                @foreach ($contacts as $item)
+                                                    @php $cid = (int)($item['id'] ?? $item['contactid'] ?? 0); @endphp
+                                                    <option value="{{ $cid }}" {{ ((string)$selectedContactId === (string)$cid) ? 'selected' : '' }}>
+                                                        {{ $item['firstname'] }} {{ $item['lastname'] }} - {{ $item['email'] }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+
+                                            <noscript>
+                                                <input type="submit" value="Go" class="btn btn-default" />
+                                            </noscript>
+                                        </form>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="row">
                         <div class="col-xl-12 col-lg-12 col-md-12">
                             <!-- Activity Timeline -->
-                            <form method="POST" action="{{ route('admin.users.update', $client['id']) }}"
+                            <form method="POST" action="{{route('admin.users.contact.create', $client['id'])}}"
                                 class="needs-validation">
                                 @csrf
-                                @method('PUT')
+                                {{-- @method('POST') --}}
 
                                 {{-- Personal Information Card --}}
                                 <div class="card mb-4">
@@ -619,9 +655,13 @@
                                                         class="text-danger">*</span></label>
                                                 <input type="text"
                                                     class="form-control @error('firstname') is-invalid @enderror"
-                                                    id="firstname" name="firstname"
-                                                    value="{{ old('firstname', $client['firstname']) }}"
-                                                    placeholder="Enter first name" required>
+                                                    id="firstname"
+                                                    name="firstname"
+                                                    value="{{ old('firstname', $selectedContact['firstname'] ?? '') }}"
+                                                    placeholder="Enter first name"
+                                                    required>
+
+
                                                 @error('firstname')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
@@ -632,9 +672,12 @@
                                                         class="text-danger">*</span></label>
                                                 <input type="text"
                                                     class="form-control @error('lastname') is-invalid @enderror"
-                                                    id="lastname" name="lastname"
-                                                    value="{{ old('lastname', $client['lastname']) }}"
-                                                    placeholder="Enter last name" required>
+                                                    id="lastname"
+                                                    name="lastname"
+                                                    value="{{ old('lastname', $selectedContact['lastname'] ?? '') }}"
+                                                    placeholder="Enter last name"
+                                                    required>
+
                                                 @error('lastname')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
@@ -645,7 +688,7 @@
                                                 <input type="text"
                                                     class="form-control @error('companyname') is-invalid @enderror"
                                                     id="companyname" name="companyname"
-                                                    value="{{ old('companyname', $client['companyname']) }}"
+                                                    value="{{ old('companyname', $selectedContact['companyname'] ?? '') }}"
                                                     placeholder="Enter companyname name (optional)">
                                                 @error('companyname')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -657,21 +700,9 @@
                                                         class="text-danger">*</span></label>
                                                 <input type="email"
                                                     class="form-control @error('email') is-invalid @enderror" id="email"
-                                                    name="email" value="{{ old('email', $client['email']) }}"
+                                                    name="email" value="{{ old('email', $selectedContact['email'] ?? '') }}"
                                                     placeholder="Enter email address" required>
                                                 @error('email')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-
-                                            <div class="col-md-6">
-                                                <label class="form-label" for="phone">Phone Number <span
-                                                        class="text-danger">*</span></label>
-                                                <input type="tel"
-                                                    class="form-control @error('phone') is-invalid @enderror" id="phone"
-                                                    name="phone" value="{{ old('phone', $client['phonenumber']) }}"
-                                                    placeholder="Enter phone number" required>
-                                                @error('phone')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
@@ -694,7 +725,7 @@
                                                 <input type="text"
                                                     class="form-control @error('address1') is-invalid @enderror"
                                                     id="address1" name="address1"
-                                                    value="{{ old('address1', $client['address1']) }}"
+                                                    value="{{ old('address1', $selectedContact['address1'] ?? '') }}"
                                                     placeholder="Street address, P.O. box" required>
                                                 @error('address1')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -706,7 +737,7 @@
                                                 <input type="text"
                                                     class="form-control @error('address2') is-invalid @enderror"
                                                     id="address2" name="address2"
-                                                    value="{{ old('address2', $client['address2']) }}"
+                                                    value="{{ old('address2', $selectedContact['address2'] ?? '') }}"
                                                     placeholder="Apartment, suite, unit, etc. (optional)">
                                                 @error('address2')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -718,7 +749,7 @@
                                                         class="text-danger">*</span></label>
                                                 <input type="text"
                                                     class="form-control @error('city') is-invalid @enderror" id="city"
-                                                    name="city" value="{{ old('city', $client['city']) }}"
+                                                    name="city" value="{{ old('city', $selectedContact['city'] ?? '') }}"
                                                     placeholder="Enter city" required>
                                                 @error('city')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -730,7 +761,7 @@
                                                         class="text-danger">*</span></label>
                                                 <input type="text"
                                                     class="form-control @error('state') is-invalid @enderror" id="state"
-                                                    name="state" value="{{ old('state', $client['state']) }}"
+                                                    name="state" value="{{ old('state', $selectedContact['state'] ?? '') }}"
                                                     placeholder="Enter state or region" required>
                                                 @error('state')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -743,7 +774,7 @@
                                                 <input type="text"
                                                     class="form-control @error('postcode') is-invalid @enderror"
                                                     id="postcode" name="postcode"
-                                                    value="{{ old('postcode', $client['postcode']) }}"
+                                                    value="{{ old('postcode', $selectedContact['postcode'] ?? '') }}"
                                                     placeholder="Enter postal code" required>
                                                 @error('postcode')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -757,19 +788,19 @@
                                                     id="country" name="country" required>
                                                     <option value="">Select Country</option>
                                                     <option value="US"
-                                                        {{ old('country', $client['country']) == 'US' ? 'selected' : '' }}>
+                                                        {{ old('country', $selectedContact['country'] ?? '') == 'US' ? 'selected' : '' }}>
                                                         United States</option>
                                                     <option value="GB"
-                                                        {{ old('country', $client['country']) == 'GB' ? 'selected' : '' }}>
+                                                        {{ old('country', $selectedContact['country'] ?? '') == 'GB' ? 'selected' : '' }}>
                                                         United Kingdom</option>
                                                     <option value="CA"
-                                                        {{ old('country', $client['country']) == 'CA' ? 'selected' : '' }}>
+                                                        {{ old('country', $selectedContact['country'] ?? '') == 'CA' ? 'selected' : '' }}>
                                                         Canada</option>
                                                     <option value="AU"
-                                                        {{ old('country', $client['country']) == 'AU' ? 'selected' : '' }}>
+                                                        {{ old('country', $selectedContact['country'] ?? '') == 'AU' ? 'selected' : '' }}>
                                                         Australia</option>
                                                     <option value="BD"
-                                                        {{ old('country', $client['country']) == 'BD' ? 'selected' : '' }}>
+                                                        {{ old('country', $selectedContact['country'] ?? '') == 'BD' ? 'selected' : '' }}>
                                                         Bangladesh</option>
                                                     {{-- Add more countries as needed --}}
                                                 </select>
@@ -778,612 +809,136 @@
                                                 @enderror
                                             </div>
 
-                                            <div class="col-md-6">
+                                            {{-- <div class="col-md-6">
                                                 <label class="form-label" for="tax_id">Tax ID/VAT Number</label>
                                                 <input type="text"
                                                     class="form-control @error('tax_id') is-invalid @enderror"
                                                     id="tax_id" name="tax_id"
-                                                    value="{{ old('tax_id', $client['tax_id']) }}"
+                                                    value="{{ old('tax_id', $selectedContact['tax_id'] ?? '') }}"
                                                     placeholder="Enter tax ID (optional)">
                                                 @error('tax_id')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
-                                            </div>
+                                            </div> --}}
                                         </div>
                                     </div>
                                 </div>
 
                                 {{-- Account Settings Card --}}
-                                <div class="card mb-4">
-                                    <div class="card-header">
-                                        <h5 class="card-title mb-0">
-                                            <i class="ti ti-settings me-2"></i>Account Settings
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row g-3">
-                                            <div class="col-md-6">
-                                                <label class="form-label" for="currency">Currency</label>
-                                                <select class="form-select @error('currency') is-invalid @enderror"
-                                                    id="currency" name="currency">
 
-                                                    @foreach ($currencies as $item)
-                                                    <option value="{{ $item['id'] }}"
-                                                        {{ old('currency', $client['currency']) == $item['id'] ? 'selected' : '' }}>
-                                                        {{ $item['code'] }} ({{ $item['prefix'] }})</option>
-                                                    @endforeach
-
-                                                </select>
-                                                @error('currency')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-
-                                            <div class="col-md-6">
-                                                <label class="form-label" for="group">Client Group</label>
-                                                <select class="form-select @error('group') is-invalid @enderror"
-                                                    id="group" name="group">
-                                                    <option value="">Select Group</option>
-                                                    @php $selectedGroup = old('group', $client['groupid'] ?? '');
-                                                    @endphp
-                                                    @foreach ($groups as $item)
-                                                    <option value="{{ $item['id'] }}"
-                                                        {{ (string)$selectedGroup === (string)$item['id'] ? 'selected' : '' }}>
-                                                        {{ $item['groupname'] }}
-                                                    </option>
-                                                    @endforeach
-
-
-
-                                                </select>
-                                                @error('group')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-
-                                            <div class="col-md-6">
-                                                <label class="form-label" for="status">Account Status</label>
-                                                <select class="form-select @error('status') is-invalid @enderror"
-                                                    id="status" name="status">
-                                                    <option value="Active"
-                                                        {{ old('status', $client['status']) == 'Active' ? 'selected' : '' }}>
-                                                        Active
-                                                    </option>
-                                                    <option value="Inactive"
-                                                        {{ old('status', $client['status']) == 'Inactive' ? 'selected' : '' }}>
-                                                        Inactive
-                                                    </option>
-                                                    <option value="Closed"
-                                                        {{ old('status', $client['status']) == 'Closed' ? 'selected' : '' }}>
-                                                        Closed
-                                                    </option>
-                                                </select>
-                                                @error('status')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-
-                                            <div class="col-md-6">
-
-
-                                            </div>
-
-                                            {{-- <div class="col-12">
-                                                <div class="form-check form-switch mt-2">
-                                                    <input class="form-check-input" type="checkbox"
-                                                        id="send_welcome_email" name="send_welcome_email" value="1"
-                                                        {{ old('send_welcome_email', $client['send_welcome_email']) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="send_welcome_email">
-                                                Send welcome email to client with login details
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-12">
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" id="email_verification"
-                                                name="email_verification" value="1"
-                                                {{ old('email_verification', $client['email_verification']) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="email_verification">
-                                                Require email verification
-                                            </label>
-                                        </div>
-                                    </div> --}}
-                                </div>
-                        </div>
-                    </div>
-                    @php
-                    $prefs = $client['email_preferences'] ?? [];
-                    @endphp
-
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i class="ti ti-mail me-2"></i>Email Preferences
-                            </h5>
-                        </div>
-
-                        <div class="card-body">
-                            <div class="row g-3">
-
-                                @php
+                                {{-- @php
                                 $prefs = $client['email_preferences'] ?? [];
                                 @endphp
 
-                                <div class="row">
-                                    @foreach(['general','invoice','support','product','domain','affiliate'] as $p)
-                                    <div class="col-md-6 mb-1">
-                                        <div class="form-check form-switch">
-                                            <input type="hidden" name="email_preferences[{{ $p }}]" value="0">
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">
+                                            <i class="ti ti-mail me-2"></i>Email Preferences
+                                        </h5>
+                                    </div>
 
-                                            <input class="form-check-input" type="checkbox" id="email_pref_{{ $p }}"
-                                                name="email_preferences[{{ $p }}]" value="1"
-                                                {{ old("email_preferences.$p", (int)($prefs[$p] ?? 0)) ? 'checked' : '' }}>
+                                    <div class="card-body">
+                                        <div class="row g-3">
 
-                                            <label class="form-check-label" for="email_pref_{{ $p }}">
-                                                {{ ucfirst($p) }} Emails
-                                            </label>
+                                            @php
+                                            $prefs = $client['email_preferences'] ?? [];
+                                            @endphp
+
+                                            <div class="row">
+                                                @foreach(['general','invoice','support','product','domain','affiliate']
+                                                as $p)
+                                                <div class="col-md-6 mb-1">
+                                                    <div class="form-check form-switch">
+                                                        <input type="hidden" name="email_preferences[{{ $p }}]"
+                                                            value="0">
+
+                                                        <input class="form-check-input" type="checkbox"
+                                                            id="email_pref_{{ $p }}" name="email_preferences[{{ $p }}]"
+                                                            value="1"
+                                                            {{ old("email_preferences.$p", (int)($prefs[$p] ?? 0)) ? 'checked' : '' }}>
+
+                                                        <label class="form-check-label" for="email_pref_{{ $p }}">
+                                                            {{ ucfirst($p) }} Emails
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                @endforeach
+                                            </div>
+
+
                                         </div>
                                     </div>
-                                    @endforeach
+                                </div> --}}
+
+
+
+
+
+
+                                {{-- Form Actions --}}
+                                <div class="d-flex justify-content-end gap-2 mb-5">
+                                    <button type="reset" class="btn btn-outline-secondary">
+                                        <i class="ti ti-refresh me-1"></i> Reset
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="ti ti-device-floppy me-1"></i> Save Client
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary" onclick="saveAndContinue()">
+                                        <i class="ti ti-device-floppy me-1"></i> Save & Add Another
+                                    </button>
                                 </div>
-
-
-                            </div>
-                        </div>
-                    </div>
-                    @php
-                    $labels = [
-                    'latefeeoveride' => 'Late Fees',
-                    'overideduenotices' => 'Overdue Notices',
-                    'emailoptout' => 'Status Update',
-
-                    'separateinvoices' => 'Separate Invoices',
-                    'disableautocc' => 'Disable CC Processing',
-                    'allowSingleSignOn' => 'Allow Single Sign-On',
-                    'taxexempt' => 'Tax Exempt',
-                    'marketing_emails_opt_in'=> 'Marketing Emails Opt-in',
-                    ];
-
-                    // এগুলো WHMCS API তে inverse type
-                    $inverse = ['latefeeoveride','overideduenotices','emailoptout'];
-
-                    $defaults = [
-                    'latefeeoveride' => (bool)($client['latefeeoveride'] ?? false),
-                    'overideduenotices' => (bool)($client['overideduenotices'] ?? false),
-                    'emailoptout' => (bool)($client['emailoptout'] ?? false),
-
-                    'separateinvoices' => (bool)($client['separateinvoices'] ?? false),
-                    'disableautocc' => (bool)($client['disableautocc'] ?? false),
-                    'taxexempt' => (bool)($client['taxexempt'] ?? false),
-                    'marketing_emails_opt_in' => (bool)($client['marketing_emails_opt_in'] ?? false),
-                    'allowSingleSignOn' => (int)($client['allowSingleSignOn'] ?? 0),
-                    ];
-
-                    function oldBool($key, $default) {
-                    $v = old($key, null);
-                    if ($v === null) return (bool)$default;
-                    return in_array($v, [1,'1',true,'true','on'], true);
-                    }
-                    @endphp
-
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i class="ti ti-toggle-left me-2"></i>Settings
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                @foreach($labels as $field => $label)
-
-                                @php
-                                // UI তে checked হবে:
-                                // inverse field হলে !value
-                                $raw = ($field === 'allowSingleSignOn')
-                                ? (int) old($field, $defaults[$field])
-                                : oldBool($field, $defaults[$field]);
-
-                                $uiChecked = in_array($field, $inverse, true) ? !$raw : (bool)$raw;
-                                @endphp
-
-                                <div class="col-md-6">
-                                    <div class="form-check form-switch">
-
-                                        {{-- hidden always --}}
-                                        @if($field === 'allowSingleSignOn')
-                                        <input type="hidden" name="{{ $field }}" value="0">
-                                        <input class="form-check-input" type="checkbox" id="toggle_{{ $field }}"
-                                            name="{{ $field }}" value="1" {{ $uiChecked ? 'checked' : '' }}>
-                                        @else
-                                        <input type="hidden" name="{{ $field }}" value="0">
-                                        <input class="form-check-input" type="checkbox" id="toggle_{{ $field }}"
-                                            name="{{ $field }}" value="1" {{ $uiChecked ? 'checked' : '' }}>
-                                        @endif
-
-                                        <label class="form-check-label" for="toggle_{{ $field }}">{{ $label }}</label>
-                                    </div>
-                                </div>
-
-                                @endforeach
-                            </div>
-
+                            </form>
 
                         </div>
                     </div>
-
-
-
-
-                    {{-- Additional Notes Card --}}
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i class="ti ti-notes me-2"></i>Additional Notes
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-12">
-                                    <label class="form-label" for="notes">Internal Notes</label>
-                                    <textarea class="form-control @error('notes') is-invalid @enderror" id="notes"
-                                        name="notes" rows="3"
-                                        placeholder="Add any internal notes about this client (optional)">{{ old('notes', $client['notes']) }}</textarea>
-                                    @error('notes')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                    <div class="form-text">These notes are only visible to staff members.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Form Actions --}}
-                    <div class="d-flex justify-content-end gap-2 mb-5">
-                        <button type="reset" class="btn btn-outline-secondary">
-                            <i class="ti ti-refresh me-1"></i> Reset
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="ti ti-device-floppy me-1"></i> Save Client
-                        </button>
-                        <button type="button" class="btn btn-outline-primary" onclick="saveAndContinue()">
-                            <i class="ti ti-device-floppy me-1"></i> Save & Add Another
-                        </button>
-                    </div>
-                    </form>
-                    <!--/ Activity Timeline -->
-                    <div class="row">
-                        <!-- Connections -->
-                        <div class="col-lg-12 col-xl-6">
-                            <div class="card card-action mb-6">
-                                <div class="card-header align-items-center">
-                                    <h5 class="card-action-title mb-0">Connections</h5>
-                                    <div class="card-action-element">
-                                        <div class="dropdown">
-                                            <button type="button"
-                                                class="btn btn-icon btn-text-secondary rounded-pill dropdown-toggle hide-arrow p-0 text-body-secondary"
-                                                data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i
-                                                    class="icon-base ti tabler-dots-vertical icon-md text-body-secondary"></i>
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li><a class="dropdown-item" href="javascript:void(0);">Share
-                                                        connections</a></li>
-                                                <li><a class="dropdown-item" href="javascript:void(0);">Suggest
-                                                        edits</a></li>
-                                                <li>
-                                                    <hr class="dropdown-divider" />
-                                                </li>
-                                                <li><a class="dropdown-item" href="javascript:void(0);">Report
-                                                        bug</a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="card-body">
-                                    <ul class="list-unstyled mb-0">
-                                        <li class="mb-4">
-                                            <div class="d-flex align-items-center">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar me-2">
-                                                        <img src="../../assets/img/avatars/2.png" alt="Avatar"
-                                                            class="rounded-circle" />
-                                                    </div>
-                                                    <div class="me-2">
-                                                        <h6 class="mb-0">Cecilia Payne</h6>
-                                                        <small>45 Connections</small>
-                                                    </div>
-                                                </div>
-                                                <div class="ms-auto">
-                                                    <button class="btn btn-label-primary btn-icon">
-                                                        <i class="icon-base ti tabler-user-check icon-22px"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li class="mb-4">
-                                            <div class="d-flex align-items-center">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar me-2">
-                                                        <img src="../../assets/img/avatars/3.png" alt="Avatar"
-                                                            class="rounded-circle" />
-                                                    </div>
-                                                    <div class="me-2">
-                                                        <h6 class="mb-0">Curtis Fletcher</h6>
-                                                        <small>1.32k Connections</small>
-                                                    </div>
-                                                </div>
-                                                <div class="ms-auto">
-                                                    <button class="btn btn-primary btn-icon">
-                                                        <i class="icon-base ti tabler-user-x icon-22px"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li class="mb-4">
-                                            <div class="d-flex align-items-center">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar me-2">
-                                                        <img src="../../assets/img/avatars/10.png" alt="Avatar"
-                                                            class="rounded-circle" />
-                                                    </div>
-                                                    <div class="me-2">
-                                                        <h6 class="mb-0">Alice Stone</h6>
-                                                        <small>125 Connections</small>
-                                                    </div>
-                                                </div>
-                                                <div class="ms-auto">
-                                                    <button class="btn btn-primary btn-icon">
-                                                        <i class="icon-base ti tabler-user-x icon-22px"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li class="mb-4">
-                                            <div class="d-flex align-items-center">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar me-2">
-                                                        <img src="../../assets/img/avatars/7.png" alt="Avatar"
-                                                            class="rounded-circle" />
-                                                    </div>
-                                                    <div class="me-2">
-                                                        <h6 class="mb-0">Darrell Barnes</h6>
-                                                        <small>456 Connections</small>
-                                                    </div>
-                                                </div>
-                                                <div class="ms-auto">
-                                                    <button class="btn btn-label-primary btn-icon">
-                                                        <i class="icon-base ti tabler-user-check icon-22px"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </li>
-
-                                        <li class="mb-6">
-                                            <div class="d-flex align-items-center">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar me-2">
-                                                        <img src="../../assets/img/avatars/12.png" alt="Avatar"
-                                                            class="rounded-circle" />
-                                                    </div>
-                                                    <div class="me-2">
-                                                        <h6 class="mb-0">Eugenia Moore</h6>
-                                                        <small>1.2k Connections</small>
-                                                    </div>
-                                                </div>
-                                                <div class="ms-auto">
-                                                    <button class="btn btn-label-primary btn-icon">
-                                                        <i class="icon-base ti tabler-user-check icon-22px"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li class="text-center">
-                                            <a href="javascript:;">View all connections</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <!--/ Connections -->
-                        <!-- Teams -->
-                        <div class="col-lg-12 col-xl-6">
-                            <div class="card card-action mb-6">
-                                <div class="card-header align-items-center">
-                                    <h5 class="card-action-title mb-0">Teams</h5>
-                                    <div class="card-action-element">
-                                        <div class="dropdown">
-                                            <button type="button"
-                                                class="btn btn-icon btn-text-secondary dropdown-toggle hide-arrow p-0"
-                                                data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i
-                                                    class="icon-base ti tabler-dots-vertical  icon-md text-body-secondary"></i>
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li><a class="dropdown-item" href="javascript:void(0);">Share
-                                                        teams</a></li>
-                                                <li><a class="dropdown-item" href="javascript:void(0);">Suggest
-                                                        edits</a></li>
-                                                <li>
-                                                    <hr class="dropdown-divider" />
-                                                </li>
-                                                <li><a class="dropdown-item" href="javascript:void(0);">Report
-                                                        bug</a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="card-body">
-                                    <ul class="list-unstyled mb-0">
-                                        <li class="mb-4">
-                                            <div class="d-flex align-items-center">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar me-2">
-                                                        <img src="../../assets/img/icons/brands/react-label.png"
-                                                            alt="Avatar" class="rounded-circle" />
-                                                    </div>
-                                                    <div class="me-2">
-                                                        <h6 class="mb-0">React Developers</h6>
-                                                        <small>72 Members</small>
-                                                    </div>
-                                                </div>
-                                                <div class="ms-auto">
-                                                    <a href="javascript:;"><span
-                                                            class="badge bg-label-danger">Developer</span></a>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li class="mb-4">
-                                            <div class="d-flex align-items-center">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar me-2">
-                                                        <img src="../../assets/img/icons/brands/support-label.png"
-                                                            alt="Avatar" class="rounded-circle" />
-                                                    </div>
-                                                    <div class="me-2">
-                                                        <h6 class="mb-0">Support Team</h6>
-                                                        <small>122 Members</small>
-                                                    </div>
-                                                </div>
-                                                <div class="ms-auto">
-                                                    <a href="javascript:;"><span
-                                                            class="badge bg-label-primary">Support</span></a>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li class="mb-4">
-                                            <div class="d-flex align-items-center">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar me-2">
-                                                        <img src="../../assets/img/icons/brands/figma-label.png"
-                                                            alt="Avatar" class="rounded-circle" />
-                                                    </div>
-                                                    <div class="me-2">
-                                                        <h6 class="mb-0">UI Designers</h6>
-                                                        <small>7 Members</small>
-                                                    </div>
-                                                </div>
-                                                <div class="ms-auto">
-                                                    <a href="javascript:;"><span
-                                                            class="badge bg-label-info">Designer</span></a>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li class="mb-4">
-                                            <div class="d-flex align-items-center">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar me-2">
-                                                        <img src="../../assets/img/icons/brands/vue-label.png"
-                                                            alt="Avatar" class="rounded-circle" />
-                                                    </div>
-                                                    <div class="me-2">
-                                                        <h6 class="mb-0">Vue.js Developers</h6>
-                                                        <small>289 Members</small>
-                                                    </div>
-                                                </div>
-                                                <div class="ms-auto">
-                                                    <a href="javascript:;"><span
-                                                            class="badge bg-label-danger">Developer</span></a>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li class="mb-6">
-                                            <div class="d-flex align-items-center">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar me-2">
-                                                        <img src="../../assets/img/icons/brands/twitter-label.png"
-                                                            alt="Avatar" class="rounded-circle" />
-                                                    </div>
-                                                    <div class="me-w">
-                                                        <h6 class="mb-0">Digital Marketing</h6>
-                                                        <small>24 Members</small>
-                                                    </div>
-                                                </div>
-                                                <div class="ms-auto">
-                                                    <a href="javascript:;"><span
-                                                            class="badge bg-label-secondary">Marketing</span></a>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li class="text-center">
-                                            <a href="javascript:;">View all teams</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <!--/ Teams -->
-                    </div>
-                    <!-- Projects table -->
-                    <div class="card mb-6">
-                        <div class="mb-4">
-                            <table class="table datatable-project">
-                                <thead class="border-top">
-                                    <tr>
-                                        <th></th>
-                                        <th></th>
-                                        <th>Project</th>
-                                        <th>Leader</th>
-                                        <th>Team</th>
-                                        <th class="w-px-200">Progress</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                            </table>
-                        </div>
-                    </div>
-                    <!--/ Projects table -->
+                    <!--/ User Profile Content -->
                 </div>
+                <!-- / Content -->
+
+                <!-- Footer -->
+                <footer class="content-footer footer bg-footer-theme">
+                    <div class="container-xxl">
+                        <div
+                            class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
+                            <div class="text-body">
+                                &#169;
+                                <script>
+                                    document.write(new Date().getFullYear());
+
+                                </script>
+                                , made with ❤️ by <a href="https://pixinvent.com" target="_blank"
+                                    class="footer-link">Pixinvent</a>
+                            </div>
+                            <div class="d-none d-lg-inline-block">
+                                <a href="https://themeforest.net/licenses/standard" class="footer-link me-4"
+                                    target="_blank">License</a>
+                                <a href="https://themeforest.net/user/pixinvent/portfolio" target="_blank"
+                                    class="footer-link me-4">More Themes</a>
+
+                                <a href="https://demos.pixinvent.com/vuexy-html-admin-template/documentation/"
+                                    target="_blank" class="footer-link me-4">Documentation</a>
+
+                                <a href="https://pixinvent.ticksy.com/" target="_blank"
+                                    class="footer-link d-none d-sm-inline-block">Support</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+                <!-- / Footer -->
+
+                <div class="content-backdrop fade"></div>
             </div>
-            <!--/ User Profile Content -->
+
+            <!-- Content wrapper -->
         </div>
-        <!-- / Content -->
-
-        <!-- Footer -->
-        <footer class="content-footer footer bg-footer-theme">
-            <div class="container-xxl">
-                <div
-                    class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
-                    <div class="text-body">
-                        &#169;
-                        <script>
-                            document.write(new Date().getFullYear());
-
-                        </script>
-                        , made with ❤️ by <a href="https://pixinvent.com" target="_blank"
-                            class="footer-link">Pixinvent</a>
-                    </div>
-                    <div class="d-none d-lg-inline-block">
-                        <a href="https://themeforest.net/licenses/standard" class="footer-link me-4"
-                            target="_blank">License</a>
-                        <a href="https://themeforest.net/user/pixinvent/portfolio" target="_blank"
-                            class="footer-link me-4">More Themes</a>
-
-                        <a href="https://demos.pixinvent.com/vuexy-html-admin-template/documentation/" target="_blank"
-                            class="footer-link me-4">Documentation</a>
-
-                        <a href="https://pixinvent.ticksy.com/" target="_blank"
-                            class="footer-link d-none d-sm-inline-block">Support</a>
-                    </div>
-                </div>
-            </div>
-        </footer>
-        <!-- / Footer -->
-
-        <div class="content-backdrop fade"></div>
+        <!-- / Layout page -->
     </div>
 
-    <!-- Content wrapper -->
-</div>
-<!-- / Layout page -->
-</div>
+    <!-- Overlay -->
+    <div class="layout-overlay layout-menu-toggle"></div>
 
-<!-- Overlay -->
-<div class="layout-overlay layout-menu-toggle"></div>
-
-<!-- Drag Target Area To SlideIn Menu On Small Screens -->
-<div class="drag-target"></div>
+    <!-- Drag Target Area To SlideIn Menu On Small Screens -->
+    <div class="drag-target"></div>
 </div>
 
 

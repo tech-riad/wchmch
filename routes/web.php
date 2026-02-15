@@ -28,4 +28,15 @@ Route::middleware(['web', 'auth','whmcsAdmin'])->group(function () {
     Route::get('/users/edit/{id}', [ClientController::class, 'edit'])->name('admin.users.edit');
     Route::put('/users/update/{id}', [ClientController::class, 'update'])->name('admin.users.update');
 
+
+
+    Route::get('/users/contact/{id}', [ClientController::class, 'getUserContact'])->name('admin.users.contact');
+    Route::post('/users/contact/{id}/create', [ClientController::class, 'createUserContact'])->name('admin.users.contact.create');
+
+
+
+
+
+
+
 });

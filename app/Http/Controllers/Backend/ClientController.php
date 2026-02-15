@@ -74,7 +74,6 @@ class ClientController extends Controller
             'limitnum'   => 50,
         ]);
 
-        // Fix: Use $currencyApi instead of $currency
         $currencies = $currencyApi['currencies']['currency'] ?? [];
 
         $groupApi = $whmcs->call('GetClientGroups', [
@@ -84,7 +83,6 @@ class ClientController extends Controller
 
         // dd($groupApi);
         $groups = $groupApi['groups']['group'] ?? [];
-        // Payment method API call
         $paymentMethodApi = $whmcs->call('GetPaymentMethods', [
             'limitstart' => 0,
             'limitnum'   => 50,
@@ -338,6 +336,116 @@ class ClientController extends Controller
         return back()->with([
             'success' => 'Client updated successfully'
         ]);
+    }
+
+    public function getUserContact(WhmcsService $whmcs, Request $request, $id)
+    {
+        if (!$id) {
+            abort(404);
+        }
+
+        // Client details
+        $clientResp = $whmcs->call('GetClientsDetails', [
+            'clientid' => (int)$id,
+        ]);
+        // dd($clientResp);
+
+        $client = $clientResp['client'] ?? [];
+
+        // Contacts list
+        $resp = $whmcs->call('GetContacts', [
+            'clientid' => (int)$id,
+        ]);
+        // dd($resp);
+
+        if (($resp['result'] ?? '') !== 'success') {
+            return back()->withErrors(['whmcs' => $resp['message'] ?? 'Failed to fetch client contacts']);
+        }
+
+        $contacts = $resp['contacts']['contact'] ?? [];
+
+        // selected contact id from query: ?contactid=...
+        $contactid = $request->query('contactid');
+
+        // Decide default selection
+        $selectedContactId = null;
+        if ($contactid === 'addnew' || empty($contacts)) {
+            $selectedContactId = 'addnew';
+        } elseif (!empty($contactid)) {
+            $selectedContactId = (int)$contactid;
+        } else {
+            // no query, has contacts => select first
+            $first = $contacts[0] ?? null;
+            $selectedContactId = $first ? (int)($first['id'] ?? $first['contactid'] ?? 0) : 'addnew';
+        }
+
+        // Load selected contact details for form (if not addnew)
+        $selectedContact = [];
+        if ($selectedContactId !== 'addnew' && !empty($selectedContactId)) {
+            // Try to get full details (WHMCS action name may vary)
+            $detailResp = $whmcs->call('GetContactDetails', [
+                'contactid' => (int)$selectedContactId,
+            ]);
+
+            // fallback: if GetContactDetails not available, fill from list item
+            $selectedContact = $detailResp['contact'] ?? [];
+
+            if (empty($selectedContact)) {
+                foreach ($contacts as $c) {
+                    $cid = (int)($c['id'] ?? $c['contactid'] ?? 0);
+                    if ($cid === (int)$selectedContactId) {
+                        $selectedContact = $c;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return view('backend.client.contact.index', [
+            'contacts' => $contacts,
+            'client' => $client,
+            'selectedContactId' => $selectedContactId,   // 'addnew' OR int id
+            'selectedContact' => $selectedContact,       // array (blank if addnew)
+        ]);
+    }
+
+
+    public function createUserContact(WhmcsService $whmcs, Request $request, $id)
+    {
+        // dd($request->all(), $id);
+        $request->validate([
+            'firstname' => 'required|string|max:255',
+            'lastname'  => 'required|string|max:255',
+            'email'     => 'required|email|max:255',
+            'phone'     => 'nullable|string|max:30',
+        ]);
+
+        $postData = [
+            'clientid'  => (int)$id,
+            'firstname' => $request->input('firstname'),
+            'lastname'  => $request->input('lastname'),
+            'email'     => $request->input('email'),
+            'address1'     => $request->input('address1'),
+            'address2'     => $request->input('address2'),
+            'city'     => $request->input('city'),
+            'state'     => $request->input('state'),
+            'postcode'     => $request->input('postcode'),
+            'country'     => $request->input('country'),
+            'companyname'     => $request->input('companyname'),
+
+        ];
+
+        if ($request->filled('phone')) {
+            $postData['phonenumber'] = $request->input('phone');
+        }
+
+        $resp = $whmcs->call('AddContact', $postData);
+
+        if (!is_array($resp) || ($resp['result'] ?? '') !== 'success') {
+            return back()->withErrors(['whmcs' => $resp['message'] ?? 'Failed to create contact'])->withInput();
+        }
+
+        return back()->with('success', 'Contact created successfully');
     }
 
 
