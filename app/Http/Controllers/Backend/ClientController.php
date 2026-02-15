@@ -446,6 +446,108 @@ class ClientController extends Controller
 
         return back()->with('success', 'Contact created successfully');
     }
+    public function updateUserContact(WhmcsService $whmcs, Request $request, $clientId, $contactId)
+    {
+        $request->validate([
+            'firstname' => 'required|string|max:255',
+            'lastname'  => 'required|string|max:255',
+            'email'     => 'required|email|max:255',
+            'phone'     => 'required|string|max:30',
+
+            'address1'  => 'required|string|max:255',
+            'address2'  => 'nullable|string|max:255',
+            'city'      => 'required|string|max:255',
+            'state'     => 'required|string|max:255',
+            'postcode'  => 'required|string|max:30',
+            'country'   => 'required|string|max:2',
+
+            // email notifications
+            'generalemails'   => 'nullable|in:0,1',
+            'invoiceemails'   => 'nullable|in:0,1',
+            'supportemails'   => 'nullable|in:0,1',
+            'productemails'   => 'nullable|in:0,1',
+            'domainemails'    => 'nullable|in:0,1',
+            'affiliateemails' => 'nullable|in:0,1',
+        ]);
+
+
+        if ((int)$contactId === 0) {
+
+            $resp = $whmcs->call('AddContact', [
+                'clientid'  => (int)$clientId,
+                'firstname' => $request->firstname,
+                'lastname'  => $request->lastname,
+                'email'     => $request->email,
+                'phonenumber' => $request->phone,
+
+                'address1'  => $request->address1,
+                'address2'  => $request->address2,
+                'city'      => $request->city,
+                'state'     => $request->state,
+                'postcode'  => $request->postcode,
+                'country'   => $request->country,
+
+                'generalemails'   => (string)$request->input('generalemails', 0),
+                'invoiceemails'   => (string)$request->input('invoiceemails', 0),
+                'supportemails'   => (string)$request->input('supportemails', 0),
+                'productemails'   => (string)$request->input('productemails', 0),
+                'domainemails'    => (string)$request->input('domainemails', 0),
+                'affiliateemails' => (string)$request->input('affiliateemails', 0),
+            ]);
+
+            if (($resp['result'] ?? '') !== 'success') {
+                return back()->withErrors([
+                    'whmcs' => $resp['message'] ?? 'Contact creation failed'
+                ])->withInput();
+            }
+
+            return back()->with('success', 'Contact created successfully');
+        }
+
+
+        $postData = [
+            'contactid' => (int)$contactId,
+            'clientid'  => (int)$clientId,
+
+            'firstname' => $request->firstname,
+            'lastname'  => $request->lastname,
+            'email'     => $request->email,
+            'phonenumber' => $request->phone,
+
+            'address1'  => $request->address1,
+            'address2'  => $request->address2,
+            'city'      => $request->city,
+            'state'     => $request->state,
+            'postcode'  => $request->postcode,
+            'country'   => $request->country,
+        ];
+
+        $emailToggleFields = [
+            'generalemails',
+            'invoiceemails',
+            'supportemails',
+            'productemails',
+            'domainemails',
+            'affiliateemails',
+        ];
+
+        foreach ($emailToggleFields as $field) {
+            if ($request->has($field)) {
+                $postData[$field] = (string)$request->input($field);
+            }
+        }
+
+        $resp = $whmcs->call('UpdateContact', $postData);
+
+        if (($resp['result'] ?? '') !== 'success') {
+            return back()->withErrors([
+                'whmcs' => $resp['message'] ?? 'Contact update failed'
+            ])->withInput();
+        }
+
+        return back()->with('success', 'Contact updated successfully');
+    }
+
 
 
 

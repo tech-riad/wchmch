@@ -34,6 +34,8 @@ Route::middleware(['web', 'auth','whmcsAdmin'])->group(function () {
     Route::post('/users/contact/{id}/create', [ClientController::class, 'createUserContact'])->name('admin.users.contact.create');
 
 
+    Route::post('/users/contact/update/{clientId}/{contactId}',[ClientController::class, 'updateUserContact'])->name('admin.users.contact.update');
+
 
 
 

@@ -641,7 +641,8 @@
                     <div class="row">
                         <div class="col-xl-12 col-lg-12 col-md-12">
                             <!-- Activity Timeline -->
-                            <form method="POST" action="{{route('admin.users.contact.create', $client['id'])}}"
+                            <form method="POST"
+                                action="{{ route('admin.users.contact.update', [$client['id'], $selectedContact['id'] ?? 0]) }}"
                                 class="needs-validation">
                                 @csrf
                                 {{-- @method('POST') --}}
@@ -868,22 +869,13 @@
                                     @foreach($emailKeys as $key => $label)
 
                                         @php
-                                        /*
-                                        |--------------------------------------------------------------------------
-                                        | ✅ মূল selected value
-                                        |--------------------------------------------------------------------------
-                                        */
                                         $defaultChecked = false;
-
-                                        // 1️⃣ old() থাকলে সেটাই priority
                                         if (old($key) !== null) {
                                             $defaultChecked = in_array(old($key), [1, '1', true, 'true', 'on'], true);
                                         }
-                                        // 2️⃣ না হলে selectedContact থেকে
                                         elseif (!empty($selectedContact)) {
                                             $defaultChecked = !empty($selectedContact[$key]);
                                         }
-                                        // 3️⃣ fallback → client (optional)
                                         elseif (!empty($client)) {
                                             $defaultChecked = !empty($client[$key]);
                                         }
@@ -910,18 +902,11 @@
 
                                     @endforeach
 
-                                    
+
 
                                 </div>
                             </div>
                         </div>
-
-
-
-
-
-
-
                         {{-- Form Actions --}}
                         <div class="d-flex justify-content-end gap-2 mb-5">
                             <button type="reset" class="btn btn-outline-secondary">
