@@ -29,6 +29,8 @@
     <link rel="stylesheet" href="{{ asset('assets/vendor/css/core.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}" />
 
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/sweetalert2/sweetalert2.css') }}" />
+
     <!-- Vendors CSS -->
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}" />
 
@@ -99,6 +101,35 @@
 
     <!-- Page JS -->
     <script src="{{ asset('assets/js/pages-auth.js') }}"></script>
+
+    <script src="{{ asset('assets/vendor/libs/sweetalert2/sweetalert2.js') }}"></script>
+
+    @if (session('success'))
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: @json(session('success')),
+        timer: 2000,
+        showConfirmButton: false
+        });
+    });
+    </script>
+    @endif
+
+    @if ($errors->has('whmcs'))
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: @json($errors->first('whmcs')),
+        });
+    });
+    </script>
+    @endif
+
 
 </body>
 

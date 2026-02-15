@@ -315,26 +315,28 @@
                 </li>
             </ul>
         </li>
-        <li class="menu-item active">
+        <li class="menu-item {{ Request::is('users') || Request::is('users/create') ? 'open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle ">
                 <i class="menu-icon icon-base ti tabler-users"></i>
                 <div data-i18n="Users">Users</div>
             </a>
             <ul class="menu-sub">
-                <li class="menu-item  {{ Request::is('/users') ? 'active' : '' }}">
-                    <a href="{{ route('admin.users.index') }}" class="menu-link ">
-                        <div data-i18n="List">List</div>
-                    </a>
-                </li>
-                <li class="menu-item  {{ Request::is('/users/create') ? 'active' : '' }}">
-                    <a href="{{ route('admin.users.create') }}" class="menu-link ">
-                        <div data-i18n="Create">Create</div>
-                    </a>
-                </li>
-            </ul>
+            <li class="menu-item {{ Request::is('users') ? 'active' : '' }}">
+                <a href="{{ route('admin.users.index') }}" class="menu-link">
+                    <div data-i18n="List">List</div>
+                </a>
+            </li>
 
+            <li class="menu-item {{ Request::is('users/create') ? 'active' : '' }}">
+                <a href="{{ route('admin.users.create') }}" class="menu-link">
+                    <div data-i18n="Create">Create</div>
+                </a>
+            </li>
+        </ul>
         </li>
-    </ul>
+
+
+
     </li>
     <li class="menu-item">
         <a href="javascript:void(0);" class="menu-link menu-toggle">

@@ -192,6 +192,7 @@ class ClientController extends Controller
 
         // Fix: Use $currencyApi instead of $currency
         $currencies = $currencyApi['currencies']['currency'] ?? [];
+        // dd($currencies);
 
         $groupApi = $whmcs->call('GetClientGroups', [
             'limitstart' => 0,
@@ -221,5 +222,88 @@ class ClientController extends Controller
         ]);
 
     }
+
+    public function update(WhmcsService $whmcs, Request $request, $id)
+    {
+        // dd($request->all(), $id);
+        // ✅ Validation (যেগুলো তুমি edit ফর্মে পাঠাচ্ছ)
+        $validated = $request->validate([
+            'firstname'   => 'required|string|max:255',
+            'lastname'    => 'required|string|max:255',
+            'companyname' => 'nullable|string|max:255',
+
+            'phone'       => 'nullable|string|max:30',
+            'address1'    => 'nullable|string|max:255',
+            'address2'    => 'nullable|string|max:255',
+            'city'        => 'nullable|string|max:255',
+            'state'       => 'nullable|string|max:255',
+            'postcode'    => 'nullable|string|max:30',
+            'country'     => 'nullable|string|max:2',
+
+            'tax_id'      => 'nullable|string|max:100',
+            'currency'    => 'nullable|string|max:10',
+            'group'       => 'nullable|integer',
+            'status'      => 'nullable|in:Active,Inactive,Closed',
+
+            'payment_method' => 'nullable|string|max:50',
+            'notes'          => 'nullable|string',
+
+
+        ]);
+
+        $postData = [
+            'clientid'    => (int) $id,
+            'firstname'   => $validated['firstname'],
+            'lastname'    => $validated['lastname'],
+            'companyname' => $validated['companyname'] ?? '',
+        ];
+
+        if (!empty($validated['phone'])) {
+            $postData['phonenumber'] = $validated['phone'];
+        }
+
+        foreach (['address1','address2','city','state','postcode','country','tax_id','notes'] as $f) {
+            if (!empty($validated[$f])) {
+                $postData[$f] = $validated[$f];
+            }
+        }
+
+        $prefs = ['general','invoice','product','domain','support','affiliate'];
+
+        // dd($request->all(), $postData);
+        foreach ($prefs as $p) {
+            if ($request->has("email_preferences.$p")) {
+                $postData["email_preferences[$p]"] = $request->input("email_preferences.$p");
+            }
+        }
+
+        if (!empty($validated['currency'])) {
+            $postData['currency'] = $validated['currency'];
+        }
+
+        if (!empty($validated['group'])) {
+            $postData['groupid'] = (int) $validated['group'];
+        }
+
+        if (!empty($validated['status'])) {
+            $postData['status'] = $validated['status'];
+        }
+
+        if (!empty($validated['payment_method'])) {
+            $postData['paymentmethod'] = $validated['payment_method'];
+        }
+
+        $resp = $whmcs->call('UpdateClient', $postData);
+
+        if (!is_array($resp) || ($resp['result'] ?? '') !== 'success') {
+            $msg = $resp['message'] ?? 'WHMCS update failed';
+            return back()->withErrors(['whmcs' => $msg])->withInput();
+        }
+
+        return redirect()
+            ->back()
+            ->with('success', 'Client updated successfully');
+    }
+
 
 }

@@ -831,8 +831,8 @@
                                                     id="currency" name="currency">
 
                                                     @foreach ($currencies as $item)
-                                                    <option value="{{ $item['code'] }}"
-                                                        {{ old('currency', $client['currency']) == $item['code'] ? 'selected' : '' }}>
+                                                    <option value="{{ $item['id'] }}"
+                                                        {{ old('currency', $client['currency']) == $item['id'] ? 'selected' : '' }}>
                                                         {{ $item['code'] }} ({{ $item['prefix'] }})</option>
                                                     @endforeach
 
@@ -929,23 +929,37 @@
                         <div class="card-body">
                             <div class="row g-3">
 
-                                {{-- Example checkbox --}}
+                                @php
+                                    $prefs = $client['email_preferences'] ?? [];
+                                @endphp
+
                                 <div class="col-md-6">
                                     <div class="form-check form-switch">
+
+                                        {{-- ✅ unchecked হলে 0 যাবে --}}
+                                        <input type="hidden" name="email_preferences[general]" value="0">
+
                                         <input class="form-check-input" type="checkbox" id="email_pref_general"
                                             name="email_preferences[general]" value="1"
-                                            {{ old('email_preferences.general', $prefs['general'] ?? 0) ? 'checked' : '' }}>
+                                            {{ old('email_preferences.general', (int)($prefs['general'] ?? 0)) ? 'checked' : '' }}>
+
                                         <label class="form-check-label" for="email_pref_general">
                                             General Emails
                                         </label>
                                     </div>
                                 </div>
 
+
                                 <div class="col-md-6">
                                     <div class="form-check form-switch">
+
+                                        {{-- ✅ unchecked হলে 0 যাবে --}}
+                                        <input type="hidden" name="email_preferences[invoice]" value="0">
+
                                         <input class="form-check-input" type="checkbox" id="email_pref_invoice"
                                             name="email_preferences[invoice]" value="1"
-                                            {{ old('email_preferences.invoice', $prefs['invoice'] ?? 0) ? 'checked' : '' }}>
+                                            {{ old('email_preferences.invoice', (int)($prefs['invoice'] ?? 0)) ? 'checked' : '' }}>
+
                                         <label class="form-check-label" for="email_pref_invoice">
                                             Invoice Emails
                                         </label>
