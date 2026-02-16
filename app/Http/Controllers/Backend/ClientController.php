@@ -546,6 +546,32 @@ class ClientController extends Controller
         return back()->with('success', 'Contact updated successfully');
     }
 
+    public function products(WhmcsService $whmcs, Request $request, $clientId)
+    {
+
+        // Client details
+        $clientResp = $whmcs->call('GetClientsDetails', [
+            'clientid' => (int)$clientId,
+        ]);
+        // dd($clientResp);
+
+        $client = $clientResp['client'] ?? [];
+
+        $resp = $whmcs->call('GetClientsProducts', [
+            'clientid' => (int)$clientId,
+            'limitstart' => 0,
+            'limitnum'   => 50,
+        ]);
+
+        if (($resp['result'] ?? '') !== 'success') {
+            return back()->withErrors(['whmcs' => $resp['message'] ?? 'Failed to fetch products']);
+        }
+        $clientId = request()->route('clientId');
+        $products = $resp['products']['product'] ?? [];
+
+        return view('backend.client.product.index', compact('products', 'client', 'clientId'));
+    }
+
 
 
 

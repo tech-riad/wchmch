@@ -17,8 +17,8 @@
                             class="icon-base ti tabler-layout-grid icon-sm me-1_5"></i> Contacts </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="pages-profile-connections.html"><i
-                            class="icon-base ti tabler-link icon-sm me-1_5"></i> Connections</a>
+                    <a class="nav-link {{ request()->routeIs('admin.users.products') ? 'active' : '' }}" href="{{ route('admin.users.products', $client['id']) }}"><i
+                            class="icon-base ti tabler-link icon-sm me-1_5"></i>Products</a>
                 </li>
             </ul>
         </div>

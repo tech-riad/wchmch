@@ -37,6 +37,11 @@ Route::middleware(['web', 'auth','whmcsAdmin'])->group(function () {
     Route::post('/users/contact/update/{clientId}/{contactId}',[ClientController::class, 'updateUserContact'])->name('admin.users.contact.update');
 
 
+    // Product Management
+    Route::get('/users/products/{clientId}', [ClientController::class, 'products'])->name('admin.users.products');
+
+
+
 
 
 
