@@ -21,9 +21,7 @@
                     <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary me-2">
                         <i class="ti ti-arrow-left me-1"></i> Back to List
                     </a>
-                    <button type="submit" form="clientForm" class="btn btn-primary">
-                        <i class="ti ti-device-floppy me-1"></i> Save Client
-                    </button>
+
                 </div>
             </div>
 
@@ -390,15 +388,11 @@
 
                 {{-- Form Actions --}}
                 <div class="d-flex justify-content-end gap-2 mb-5">
-                    <button type="reset" class="btn btn-outline-secondary">
-                        <i class="ti ti-refresh me-1"></i> Reset
-                    </button>
+                    
                     <button type="submit" class="btn btn-primary">
                         <i class="ti ti-device-floppy me-1"></i> Save Client
                     </button>
-                    <button type="button" class="btn btn-outline-primary" onclick="saveAndContinue()">
-                        <i class="ti ti-device-floppy me-1"></i> Save & Add Another
-                    </button>
+
                 </div>
             </form>
         </div>

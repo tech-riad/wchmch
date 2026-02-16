@@ -33,7 +33,7 @@
 
 
         <!-- Dashboards -->
-        <li class="menu-item {{ Request::is('/dashboard') ? 'active' : '' }}">
+        <li class="menu-item {{ Request::is('dashboard') ? 'active' : '' }}">
 
             <a href="{{ route('admin.dashboard') }}" class="menu-link">
                 <i class="menu-icon icon-base ti tabler-smart-home"></i>
@@ -318,7 +318,7 @@
         <li class="menu-item {{ Request::is('users') || Request::is('users/create') ? 'open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle ">
                 <i class="menu-icon icon-base ti tabler-users"></i>
-                <div data-i18n="Users">Users</div>
+                <div data-i18n="Users">Client</div>
             </a>
             <ul class="menu-sub">
             <li class="menu-item {{ Request::is('users') ? 'active' : '' }}">

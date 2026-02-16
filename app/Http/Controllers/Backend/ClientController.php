@@ -401,8 +401,6 @@ class ClientController extends Controller
             'selectedContact' => $selectedContact,
         ]);
     }
-
-
     public function createUserContact(WhmcsService $whmcs, Request $request, $id)
     {
         // dd($request->all(), $id);
