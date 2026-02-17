@@ -41,6 +41,15 @@ Route::middleware(['web', 'auth','whmcsAdmin'])->group(function () {
     Route::get('/users/products/{clientId}', [ClientController::class, 'products'])->name('admin.users.products');
 
 
+    Route::prefix('admin')->group(function () {
+    Route::get('/orders/create', [ClientController::class, 'createOrder'])->name('admin.orders.create');
+    Route::post('/orders/store', [ClientController::class, 'storeOrder'])->name('admin.orders.store');
+
+    // AJAX
+    Route::get('/orders/ajax/products', [ClientController::class, 'ajaxProducts'])->name('admin.orders.ajax.products');
+    Route::get('/orders/ajax/client-domains', [ClientController::class, 'ajaxClientDomains'])->name('admin.orders.ajax.domains');
+    Route::get('/orders/ajax/product-pricing', [ClientController::class, 'ajaxProductPricing'])->name('admin.orders.ajax.pricing');
+});
 
 
 

@@ -50,6 +50,10 @@
     <script src="{{ asset('assets/js/config.js') }}"></script>
 
 
+    @stack('styles')
+
+
+
 </head>
 
 <body>
@@ -73,6 +77,9 @@
 
 
 
+
+
+    @stack('scripts')
 
 
     <script src="{{ asset('assets/vendor/libs/jquery/jquery.js') }}"></script>

@@ -556,6 +556,20 @@ class ClientController extends Controller
         // dd($clientResp);
 
         $client = $clientResp['client'] ?? [];
+        // comment ------------------------------------------------
+
+        $resp = $whmcs->call('GetClients', [
+            'limitstart' => 0,
+            'limitnum'   => 50,
+        ]);
+        $clients = $resp['clients']['client'] ?? [];
+        // dd($clients);
+
+        // single client normalize
+        if (!empty($clients) && isset($clients['id'])) {
+            $clients = [$clients];
+        }
+        // dd($client);
 
         $resp = $whmcs->call('GetClientsProducts', [
             'clientid' => (int)$clientId,
@@ -569,8 +583,113 @@ class ClientController extends Controller
         $clientId = request()->route('clientId');
         $products = $resp['products']['product'] ?? [];
 
-        return view('backend.client.product.index', compact('products', 'client', 'clientId'));
+        // dd($products);
+
+        $paymentMethodApi = $whmcs->call('GetPaymentMethods', [
+            'limitstart' => 0,
+            'limitnum'   => 50,
+        ]);
+
+        $respa = $whmcs->call('GetProducts', [
+            'limitstart' => 0,
+            'limitnum'   => 50,
+        ]);
+        // dd($respa);
+        $mainproducts = $respa['products']['product'] ?? [];
+
+
+        // dd($paymentMethodApi);
+        $paymethodMethods = $paymentMethodApi['paymentmethods']['paymentmethod']?? [];
+
+        return view('backend.client.product.index', compact('products', 'client', 'clientId','clients', 'paymethodMethods', 'mainproducts'));
     }
+
+
+    // <-- Additional methods for product management can be added here -->
+
+
+    public function createOrder(WhmcsService $whmcs)
+{
+    $clients = $whmcs->call('GetClients')['clients'] ?? [];   // আপনার আগের logic
+    $paymethodMethods = $whmcs->call('GetPaymentMethods')['paymentmethods']['paymentmethod'] ?? [];
+
+    return view('backend.orders.create', compact('clients','paymethodMethods'));
+}
+
+// 1) products list
+public function ajaxProducts(Request $request, WhmcsService $whmcs)
+{
+    $resp = $whmcs->call('GetProducts', [
+        'pid' => '',
+    ]);
+
+    // WHMCS return format varies; normalize simple list:
+    $products = $resp['products']['product'] ?? [];
+    return response()->json(['products' => $products]);
+}
+
+// 2) client domains list
+public function ajaxClientDomains(Request $request, WhmcsService $whmcs)
+{
+    $clientId = $request->query('client_id');
+    $resp = $whmcs->call('GetClientsDomains', ['clientid' => $clientId]);
+
+    $domains = $resp['domains']['domain'] ?? [];
+    return response()->json(['domains' => $domains]);
+}
+
+// 3) product pricing for a pid
+public function ajaxProductPricing(Request $request, WhmcsService $whmcs)
+{
+    $pid = $request->query('pid');
+    $resp = $whmcs->call('GetProducts', ['pid' => $pid]);
+
+    $product = ($resp['products']['product'][0] ?? null);
+    // pricing structure example: $product['pricing']['USD']['monthly'] etc (depends on WHMCS settings)
+    return response()->json(['product' => $product]);
+}
+
+// 4) AddOrder submit
+public function storeOrder(Request $request, WhmcsService $whmcs)
+{
+    $data = $request->validate([
+        'client_id' => 'required',
+        'payment_method' => 'required',
+        'pid' => 'required|array',
+        'pid.*' => 'nullable',
+        'domain' => 'array',
+        'billingcycle' => 'array',
+        'qty' => 'array',
+        'priceoverride' => 'array',
+    ]);
+
+    // build WHMCS AddOrder payload
+    $payload = [
+        'clientid'      => $data['client_id'],
+        'paymentmethod' => $data['payment_method'],
+        'pid'           => array_values(array_filter($data['pid'])), // remove empty
+        'domain'        => $data['domain'] ?? [],
+        'billingcycle'  => $data['billingcycle'] ?? [],
+        'qty'           => $data['qty'] ?? [],
+    ];
+
+    // priceoverride optional
+    if (!empty($data['priceoverride'])) {
+        $payload['priceoverride'] = $data['priceoverride'];
+    }
+
+    // optional flags
+    $payload['noinvoice']  = $request->boolean('generateInvoice') ? 0 : 1;
+    $payload['noemail']    = $request->boolean('sendEmail') ? 0 : 1;
+
+    $resp = $whmcs->call('AddOrder', $payload);
+
+    if (($resp['result'] ?? '') !== 'success') {
+        return back()->withErrors(['whmcs' => $resp['message'] ?? 'WHMCS AddOrder failed'])->withInput();
+    }
+
+    return redirect()->route('admin.orders.create')->with('success', 'Order created. Order ID: '.$resp['orderid']);
+}
 
 
 
