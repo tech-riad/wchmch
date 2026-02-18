@@ -548,7 +548,6 @@ class ClientController extends Controller
 
     public function products(WhmcsService $whmcs, Request $request, $clientId)
     {
-
         // Client details
         $clientResp = $whmcs->call('GetClientsDetails', [
             'clientid' => (int)$clientId,
@@ -571,17 +570,16 @@ class ClientController extends Controller
         }
         // dd($client);
 
-        $resp = $whmcs->call('GetClientsProducts', [
+        $respclientproducts = $whmcs->call('GetClientsProducts', [
             'clientid' => (int)$clientId,
             'limitstart' => 0,
             'limitnum'   => 50,
         ]);
 
-        if (($resp['result'] ?? '') !== 'success') {
-            return back()->withErrors(['whmcs' => $resp['message'] ?? 'Failed to fetch products']);
-        }
+        // dd($resp);
         $clientId = request()->route('clientId');
-        $products = $resp['products']['product'] ?? [];
+        $productsclient = $respclientproducts['products']['product'] ?? [];
+
 
         // dd($products);
 
@@ -590,106 +588,350 @@ class ClientController extends Controller
             'limitnum'   => 50,
         ]);
 
-        $respa = $whmcs->call('GetProducts', [
+        $respaproduct = $whmcs->call('GetProducts', [
             'limitstart' => 0,
             'limitnum'   => 50,
         ]);
-        // dd($respa);
-        $mainproducts = $respa['products']['product'] ?? [];
+        // dd($respaproduct);
+        $mainproducts = $respaproduct['products']['product'] ?? [];
+        $products = $mainproducts;
+        $groupMap = [];
+        foreach (($respaproduct['productgroups']['group'] ?? []) as $g) {
+            $groupMap[$g['gid']] = $g['name'];
+        }
+
+        $grouped = [];
+        foreach ($products as $p) {
+            $gid = $p['gid'] ?? 0;
+            $groupName = $groupMap[$gid] ?? ('Group #'.$gid);
+            $grouped[$groupName][] = $p;
+        }
+        // dd($mainproducts);
 
 
         // dd($paymentMethodApi);
         $paymethodMethods = $paymentMethodApi['paymentmethods']['paymentmethod']?? [];
+        // dd($products, $client, $clientId, $clients, $paymethodMethods, $mainproducts);
 
-        return view('backend.client.product.index', compact('products', 'client', 'clientId','clients', 'paymethodMethods', 'mainproducts'));
+
+        if ($productsclient === []) {
+            // dd($productsclient);
+        return view('backend.client.product.index', [
+                        'products'          => $products,
+                        'client'            => $client,
+                        'clientId'          => $clientId,
+                        'clients'           => $clients,
+                        'paymethodMethods'  => $paymethodMethods,
+                        'mainproducts'      => $grouped,
+                        'productsclient'    => $productsclient,
+                    ]);
+            }else{
+
+            dd($productsclient);
+
+
+            return view('backend.client.product.oders', [
+                'products'          => $products,
+                'client'            => $client,
+                'clientId'          => $clientId,
+                'clients'           => $clients,
+                'paymethodMethods'  => $paymethodMethods,
+                'mainproducts'      => $grouped,
+                'productsclient'    => $productsclient,
+            ]);
+            }
     }
 
 
     // <-- Additional methods for product management can be added here -->
 
 
-    public function createOrder(WhmcsService $whmcs)
-{
-    $clients = $whmcs->call('GetClients')['clients'] ?? [];   // আপনার আগের logic
-    $paymethodMethods = $whmcs->call('GetPaymentMethods')['paymentmethods']['paymentmethod'] ?? [];
+    public function createOrder(WhmcsService $whmcs, Request $request, $clientId)
+    {
+        // Client details
+        $clientResp = $whmcs->call('GetClientsDetails', [
+            'clientid' => (int)$clientId,
+        ]);
+        // dd($clientResp);
 
-    return view('backend.orders.create', compact('clients','paymethodMethods'));
-}
+        $client = $clientResp['client'] ?? [];
+        // comment ------------------------------------------------
 
-// 1) products list
-public function ajaxProducts(Request $request, WhmcsService $whmcs)
-{
-    $resp = $whmcs->call('GetProducts', [
-        'pid' => '',
-    ]);
+        $resp = $whmcs->call('GetClients', [
+            'limitstart' => 0,
+            'limitnum'   => 50,
+        ]);
+        $clients = $resp['clients']['client'] ?? [];
+        // dd($clients);
 
-    // WHMCS return format varies; normalize simple list:
-    $products = $resp['products']['product'] ?? [];
-    return response()->json(['products' => $products]);
-}
+        // single client normalize
+        if (!empty($clients) && isset($clients['id'])) {
+            $clients = [$clients];
+        }
+        // dd($client);
 
-// 2) client domains list
-public function ajaxClientDomains(Request $request, WhmcsService $whmcs)
-{
-    $clientId = $request->query('client_id');
-    $resp = $whmcs->call('GetClientsDomains', ['clientid' => $clientId]);
+        $respclientproducts = $whmcs->call('GetClientsProducts', [
+            'clientid' => (int)$clientId,
+            'limitstart' => 0,
+            'limitnum'   => 50,
+        ]);
 
-    $domains = $resp['domains']['domain'] ?? [];
-    return response()->json(['domains' => $domains]);
-}
+        // dd($resp);
+        $clientId = request()->route('clientId');
+        $productsclient = $respclientproducts['products']['product'] ?? [];
 
-// 3) product pricing for a pid
-public function ajaxProductPricing(Request $request, WhmcsService $whmcs)
-{
-    $pid = $request->query('pid');
-    $resp = $whmcs->call('GetProducts', ['pid' => $pid]);
 
-    $product = ($resp['products']['product'][0] ?? null);
-    // pricing structure example: $product['pricing']['USD']['monthly'] etc (depends on WHMCS settings)
-    return response()->json(['product' => $product]);
-}
+        // dd($products);
 
-// 4) AddOrder submit
-public function storeOrder(Request $request, WhmcsService $whmcs)
-{
-    $data = $request->validate([
-        'client_id' => 'required',
-        'payment_method' => 'required',
-        'pid' => 'required|array',
-        'pid.*' => 'nullable',
-        'domain' => 'array',
-        'billingcycle' => 'array',
-        'qty' => 'array',
-        'priceoverride' => 'array',
-    ]);
+        $paymentMethodApi = $whmcs->call('GetPaymentMethods', [
+            'limitstart' => 0,
+            'limitnum'   => 50,
+        ]);
 
-    // build WHMCS AddOrder payload
-    $payload = [
-        'clientid'      => $data['client_id'],
-        'paymentmethod' => $data['payment_method'],
-        'pid'           => array_values(array_filter($data['pid'])), // remove empty
-        'domain'        => $data['domain'] ?? [],
-        'billingcycle'  => $data['billingcycle'] ?? [],
-        'qty'           => $data['qty'] ?? [],
-    ];
+        $respaproduct = $whmcs->call('GetProducts', [
+            'limitstart' => 0,
+            'limitnum'   => 50,
+        ]);
+        // dd($respaproduct);
+        $mainproducts = $respaproduct['products']['product'] ?? [];
 
-    // priceoverride optional
-    if (!empty($data['priceoverride'])) {
-        $payload['priceoverride'] = $data['priceoverride'];
+        // ধরেন $mainproducts = $resp['products']['product'] বা আপনার যেভাবে আসছে
+        $products = $mainproducts;
+
+        // group name বের করতে map বানান (WHMCS API GetProducts -> productgroups থেকে পাওয়া যায়)
+        $groupMap = [];
+        foreach (($respaproduct['productgroups']['group'] ?? []) as $g) {
+            $groupMap[$g['gid']] = $g['name'];
+        }
+
+        // gid অনুযায়ী group
+        $grouped = [];
+        foreach ($products as $p) {
+            $gid = $p['gid'] ?? 0;
+            $groupName = $groupMap[$gid] ?? ('Group #'.$gid);
+            $grouped[$groupName][] = $p;
+        }
+        // dd($mainproducts);
+
+
+        // dd($paymentMethodApi);
+        $paymethodMethods = $paymentMethodApi['paymentmethods']['paymentmethod']?? [];
+        // dd($products, $client, $clientId, $clients, $paymethodMethods, $mainproducts);
+
+
+        return view('backend.client.product.create', [
+                        'products'          => $products,
+                        'client'            => $client,
+                        'clientId'          => $clientId,
+                        'clients'           => $clients,
+                        'paymethodMethods'  => $paymethodMethods,
+                        'mainproducts'      => $grouped,
+                        'productsclient'    => $productsclient,
+                    ]);
+
+
+
     }
 
-    // optional flags
-    $payload['noinvoice']  = $request->boolean('generateInvoice') ? 0 : 1;
-    $payload['noemail']    = $request->boolean('sendEmail') ? 0 : 1;
+    // 1) products list
+    public function ajaxProducts(Request $request, WhmcsService $whmcs)
+    {
+        $resp = $whmcs->call('GetProducts', [
+            'pid' => '',
+        ]);
 
-    $resp = $whmcs->call('AddOrder', $payload);
-
-    if (($resp['result'] ?? '') !== 'success') {
-        return back()->withErrors(['whmcs' => $resp['message'] ?? 'WHMCS AddOrder failed'])->withInput();
+        // WHMCS return format varies; normalize simple list:
+        $products = $resp['products']['product'] ?? [];
+        return response()->json(['products' => $products]);
     }
 
-    return redirect()->route('admin.orders.create')->with('success', 'Order created. Order ID: '.$resp['orderid']);
-}
+    // 2) client domains list
+    public function ajaxClientDomains(Request $request, WhmcsService $whmcs)
+    {
+        $clientId = $request->query('client_id');
+        $resp = $whmcs->call('GetClientsDomains', ['clientid' => $clientId]);
+
+        $domains = $resp['domains']['domain'] ?? [];
+        return response()->json(['domains' => $domains]);
+    }
+
+    // 3) product pricing for a pid
+    public function ajaxProductPricing(Request $request, WhmcsService $whmcs)
+    {
+        $pid = $request->query('pid');
+        $resp = $whmcs->call('GetProducts', ['pid' => $pid]);
+
+        $product = ($resp['products']['product'][0] ?? null);
+        // pricing structure example: $product['pricing']['USD']['monthly'] etc (depends on WHMCS settings)
+        return response()->json(['product' => $product]);
+    }
+
+    // 4) AddOrder submit
+    public function storeOrder(Request $request, WhmcsService $whmcs)
+    {
+        // dd($request->all());
+        $request->validate([
+            'clientid'       => 'required|integer',
+            'paymentmethod'  => 'required|string',
+            'orderstatus'    => 'nullable|string',
+        ]);
+
+        // dd($request->all());
+
+        $filterArray = function ($arr) {
+            $arr = is_array($arr) ? $arr : [];
+            return array_values(array_filter($arr, function ($v) {
+                if (is_null($v)) return false;
+                $v = is_string($v) ? trim($v) : $v;
+                return $v !== '';
+            }));
+        };
+        // dd($filterArray);
+
+        $pid          = $filterArray($request->input('pid', []));
+        $qty          = $filterArray($request->input('qty', []));
+        $domain       = $filterArray($request->input('domain', []));
+        $billingcycle = $filterArray($request->input('billingcycle', []));
+        $priceoverride= $filterArray($request->input('priceoverride', []));
+
+        $regaction    = $filterArray($request->input('regaction', []));
+        $regdomain    = $filterArray($request->input('regdomain', []));
+        $regperiod    = $filterArray($request->input('regperiod', []));
+        $eppcode      = $filterArray($request->input('eppcode', []));
+        $idnlanguage  = $filterArray($request->input('idnlanguage', []));
+
+        $dnsmanagement   = $request->input('dnsmanagement', []);
+        $emailforwarding = $request->input('emailforwarding', []);
+        $idprotection    = $request->input('idprotection', []);
+        $domainpriceoverride = $request->input('domainpriceoverride', []);
+        $domainrenewoverride = $request->input('domainrenewoverride', []);
+        // dd($pid, $qty, $domain, $billingcycle, $priceoverride, $regaction, $regdomain, $regperiod, $eppcode, $idnlanguage, $dnsmanagement, $emailforwarding, $idprotection);
+
+        $toBoolArray = function ($arr) {
+            $arr = is_array($arr) ? $arr : [];
+            $out = [];
+            foreach ($arr as $k => $v) {
+                $out[] = in_array($v, [1, '1', true, 'true', 'on'], true);
+            }
+            return $out;
+        };
+
+        $payload = [
+            'clientid'      => (int) $request->input('clientid'),
+            'paymentmethod' => $request->input('paymentmethod'),
+        ];
+        // dd($payload);
+
+        if ($request->filled('promocode') && $request->input('promocode') !== '0') {
+            $payload['promocode'] = $request->input('promocode');
+        }
+
+        if ($request->filled('orderstatus')) {
+            $payload['status'] = $request->input('orderstatus');
+        }
+
+        $payload['noemail']        = !$request->has('adminorderconf');
+        $payload['noinvoice']      = !$request->has('admingenerateinvoice');
+        $payload['noinvoiceemail'] = !$request->has('adminsendinvoice');
+
+        if (!empty($pid)) {
+            $payload['pid'] = array_map('intval', $pid);
+            // dd($payload);
+
+            if (!empty($qty)) {
+                $payload['qty'] = array_map('intval', array_pad($qty, count($pid), 1));
+            } else {
+                $payload['qty'] = array_fill(0, count($pid), 1);
+            }
+
+            if (!empty($domain)) {
+                $payload['domain'] = array_pad($domain, count($pid), '');
+            }
+            if (!empty($billingcycle)) {
+                $payload['billingcycle'] = array_pad($billingcycle, count($pid), '');
+            }
+            if (!empty($priceoverride)) {
+                $payload['priceoverride'] = array_map(function($v){
+                    return is_numeric($v) ? (float)$v : 0;
+                }, array_pad($priceoverride, count($pid), 0));
+            }
+            // dd($payload);
+        }
+
+        if (!empty($regaction)) {
+            $payload['domaintype'] = array_pad($regaction, count($regaction), '');
+
+            if (!empty($regdomain)) {
+                $payload['domain'] = isset($payload['domain'])
+                    ? $payload['domain']
+                    : [];
+                $payload['domain'] = array_merge($payload['domain'], $regdomain);
+            }
+
+            if (!empty($regperiod)) {
+                $payload['regperiod'] = array_map('intval', $regperiod);
+            }
+
+            if (!empty($eppcode)) {
+                $payload['eppcode'] = $eppcode;
+            }
+
+            if (!empty($idnlanguage)) {
+                $payload['idnlanguage'] = $idnlanguage;
+            }
+
+            if (!empty($dnsmanagement)) {
+                $payload['dnsmanagement'] = $toBoolArray($dnsmanagement);
+            }
+            if (!empty($emailforwarding)) {
+                $payload['emailforwarding'] = $toBoolArray($emailforwarding);
+            }
+            if (!empty($idprotection)) {
+                $payload['idprotection'] = $toBoolArray($idprotection);
+            }
+
+            if (!empty($domainpriceoverride)) {
+                $payload['domainpriceoverride'] = array_map(function($v){
+                    return is_numeric($v) ? (float)$v : 0;
+                }, $filterArray($domainpriceoverride));
+            }
+            if (!empty($domainrenewoverride)) {
+                $payload['domainrenewoverride'] = array_map(function($v){
+                    return is_numeric($v) ? (float)$v : 0;
+                }, $filterArray($domainrenewoverride));
+            }
+        }
+
+        $payload = array_filter($payload, function($v){
+            if (is_array($v)) return count($v) > 0;
+            return $v !== null && $v !== '';
+        });
+        // dd($payload);
+
+        $resp = $whmcs->call('AddOrder', $payload);
+        $orderId = $resp['orderid'] ?? null;
+
+        if (!$orderId) {
+            dd('No orderid returned', $resp);
+        }
+
+        // ✅ GetOrders ঠিকভাবে কল করুন (array payload)
+        $orders = $whmcs->call('GetOrders', [
+            'id' => $orderId, // কিছু WHMCS-এ id কাজ করে
+        ]);
+
+        // dd($orders);
+        if (($resp['result'] ?? '') !== 'success') {
+            return back()->withInput()->with('error', $resp['message'] ?? 'Order create failed')->with('whmcs', $resp);
+        }
+
+        // dd($resp);
+
+        return redirect()
+            ->route('admin.users.products', ['clientId' => $request->input('clientid')])
+            ->with('success', 'Order Created Successfully!')
+            ->with('whmcs', $resp);
+    }
 
 
 

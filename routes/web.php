@@ -39,10 +39,11 @@ Route::middleware(['web', 'auth','whmcsAdmin'])->group(function () {
 
     // Product Management
     Route::get('/users/products/{clientId}', [ClientController::class, 'products'])->name('admin.users.products');
+    // Route::get('/users/products/{clientId}', [ClientController::class, 'products'])->name('admin.users.products');
 
 
     Route::prefix('admin')->group(function () {
-    Route::get('/orders/create', [ClientController::class, 'createOrder'])->name('admin.orders.create');
+    Route::get('/orders/create/{clientId}', [ClientController::class, 'createOrder'])->name('admin.orders.create');
     Route::post('/orders/store', [ClientController::class, 'storeOrder'])->name('admin.orders.store');
 
     // AJAX
