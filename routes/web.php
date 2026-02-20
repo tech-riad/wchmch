@@ -39,8 +39,9 @@ Route::middleware(['web', 'auth','whmcsAdmin'])->group(function () {
 
     // Product Management
     Route::get('/users/products/{clientId}', [ClientController::class, 'products'])->name('admin.users.products');
+    Route::post('/users/products/show', [ClientController::class, 'clientProductShow'])->name('admin.users.product.show');
+    // Route::get('/users/products/{clientid}/{productid}', [ClientController::class, 'clientProductShow'])->name('admin.users.product.show');
     Route::post('/users/products/update', [ClientController::class, 'UpdateClientProduct'])->name('admin.users.product.update');
-
 
     Route::prefix('admin')->group(function () {
     Route::get('/orders/create/{clientId}', [ClientController::class, 'createOrder'])->name('admin.orders.create');

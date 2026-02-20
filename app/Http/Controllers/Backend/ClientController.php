@@ -922,6 +922,105 @@ class ClientController extends Controller
             ->with('whmcs', $resp);
     }
 
+    public function clientProductShow(WhmcsService $whmcs, Request $request)
+    {
+
+     $clientId = $request->clientid;
+     $serviceid = $request->serviceid;
+
+
+
+
+     // Client details
+        $clientResp = $whmcs->call('GetClientsDetails', [
+            'clientid' => (int)$clientId,
+        ]);
+        // dd($clientResp);
+
+        $client = $clientResp['client'] ?? [];
+        // comment ------------------------------------------------
+
+        $resp = $whmcs->call('GetClients', [
+            'limitstart' => 0,
+            'limitnum'   => 50,
+        ]);
+        $clients = $resp['clients']['client'] ?? [];
+        // dd($clients);
+
+        // single client normalize
+        if (!empty($clients) && isset($clients['id'])) {
+            $clients = [$clients];
+        }
+        // dd($client);
+
+
+        ###
+        $respclientproducts = $whmcs->call('GetClientsProducts', [
+            'clientid' => (int)$clientId,
+            'limitstart' => 0,
+            'limitnum'   => 50,
+        ]);
+
+        // dd($respclientproducts);
+        // dd($resp);
+        $clientId = request()->route('clientId');
+        $productsclient = $respclientproducts['products']['product'] ?? [];
+        $latestProduct = collect($productsclient)
+                        ->sortByDesc('id')
+                        ->first();
+
+        // dd($latestProduct);
+
+
+        // dd($products);
+
+        $paymentMethodApi = $whmcs->call('GetPaymentMethods', [
+            'limitstart' => 0,
+            'limitnum'   => 50,
+        ]);
+
+        $respaproduct = $whmcs->call('GetProducts', [
+            'limitstart' => 0,
+            'limitnum'   => 50,
+        ]);
+        // dd($respaproduct);
+        $mainproducts = $respaproduct['products']['product'] ?? [];
+        $products = $mainproducts;
+        $groupMap = [];
+        foreach (($respaproduct['productgroups']['group'] ?? []) as $g) {
+            $groupMap[$g['gid']] = $g['name'];
+        }
+
+        $grouped = [];
+        foreach ($products as $p) {
+            $gid = $p['gid'] ?? 0;
+            $groupName = $groupMap[$gid] ?? ('Group #'.$gid);
+            $grouped[$groupName][] = $p;
+        }
+        // dd($mainproducts);
+
+
+        // dd($paymentMethodApi);
+        $paymethodMethods = $paymentMethodApi['paymentmethods']['paymentmethod']?? [];
+        // dd($products, $client, $clientId, $clients, $paymethodMethods, $mainproducts);
+
+
+
+        // dd($productsclient);
+            return view('backend.client.product.show', [
+                'products'          => $products,
+                'client'            => $client,
+                'clientId'          => $clientId,
+                'clients'           => $clients,
+                'paymethodMethods'  => $paymethodMethods,
+                'mainproducts'      => $grouped,
+                'productsclient'    => $productsclient,
+                'latestProduct'    => $latestProduct,
+            ]);
+
+
+    }
+
 
 
     public function UpdateClientProduct(Request $request, WhmcsService $whmcs)

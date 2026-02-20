@@ -633,100 +633,239 @@
                     <div class="row">
                         <div class="col-md-12 col-lg-12 col-xl-12">
                             <!-- About User -->
+                            {{-- MAIN LAYOUT: Left Form + Right Sidebar --}}
+                            <div class="row g-3">
 
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="com-lg-8">
-                                            <div class="tab-pane fade show active" id="products" role="tabpanel"
-                                                aria-labelledby="products-tab">
-                                                <div class="card">
-                                                    <h5 class="card-header d-flex align-items-center">My Products &
-                                                        Services</h5>
-                                                    <div class="table-responsive">
-                                                        <table class="table table-hover">
-                                                            <thead class="border-top">
-                                                                <tr>
-                                                                    <th>Product</th>
-                                                                    <th>Billing</th>
-                                                                    <th>Next due</th>
-                                                                    <th>Status</th>
-                                                                    <th class="text-end">Actions</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                @php
-                                                                $latestId = collect($productsclient)->last()['id'] ??
-                                                                null;
-                                                                // dd($latestId);
-                                                                @endphp
+                                {{-- LEFT: SERVICE FORM --}}
+                                <div class="col-xl-8">
 
-                                                                @foreach ($productsclient as $item)
-                                                                <tr>
-                                                                    <td class="fieldarea" width="30%">{{ $item['id'] }}
-                                                                        - <a
-                                                                            href="orders.php?action=view&amp;id={{ $item['id'] }}">View
-                                                                            Order</a></td>
-                                                                    <td>{{ $item['billingcycle'] }}</td>
-                                                                    <td>{{ $item['nextduedate'] }}</td>
-                                                                    <td>
-                                                                        @php
-                                                                        $status = $item['status'] ?? 'Pending';
-
-                                                                        $badgeClass = match($status) {
-                                                                        'Active' => 'bg-success',
-                                                                        'Pending' => 'bg-warning',
-                                                                        'Suspended' => 'bg-info',
-                                                                        'Terminated' => 'bg-danger',
-                                                                        'Cancelled' => 'bg-secondary',
-                                                                        'Fraud' => 'bg-dark',
-                                                                        'Completed' => 'bg-primary',
-                                                                        default => 'bg-secondary',
-                                                                        };
-                                                                        @endphp
-
-                                                                        <span
-                                                                            class="badge {{ $badgeClass }}">{{ $status }}</span>
-
-
-                                                                    </td>
-                                                                    <td class="text-end">
-
-
-                                                                        <form method="POST" action="{{ route('admin.users.product.show') }}">
-                                                                            @csrf
-
-                                                                            <input type="hidden" name="serviceid" value="{{ $item['id'] }}">
-                                                                            <input type="hidden" name="clientid" value="{{ $item['clientid'] }}">
-
-                                                                            <button type="submit" class="btn btn-success">
-                                                                                Manage
-                                                                            </button>
-                                                                        </form>
-                                                                    </td>
-                                                                </tr>
-
-                                                                @endforeach
-
-
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
+                                    <form method="post" action="{{route('admin.users.product.update')}}" id="frm1">
+                                        @csrf
+                                        <input type="hidden" name="serviceid" value="{{ $latestProduct['id'] }}">
+                                        <input type="hidden" name="clientid" value="{{ $latestProduct['clientid'] }}">
+                                        {{-- Service Details --}}
+                                        <div class="card shadow-sm mb-3">
+                                            <div
+                                                class="card-header bg-white d-flex align-items-center justify-content-between">
+                                                <div class="fw-semibold">
+                                                    Service Details
+                                                </div>
+                                                <div class="small text-muted">
+                                                    Service ID: <span
+                                                        class="fw-semibold">{{ $latestProduct['orderid'] ?? 5 }}</span>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                    </div>
+                                            <div class="card-body">
+                                                <div class="row g-3">
+
+                                                    {{-- Order --}}
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Order</label>
+                                                        <div class="form-control bg-light">
+                                                            {{ $latestProduct['orderid'] ?? 7 }}
+                                                            -
+                                                            <a href="#">View
+                                                                Order</a>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Reg Date --}}
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Registration Date</label>
+                                                        <input type="text" name="regdate"
+                                                            value="{{ $latestProduct['regdate'] ?? '17/02/2026' }}"
+                                                            class="form-control">
+                                                    </div>
+
+                                                    {{-- Product --}}
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Product / Service</label>
+                                                        <select name="pid[]" id="pid0"
+                                                            class="form-control select-inline pid"
+                                                            onchange="loadproductoptions(this)">
+                                                            <option value="">None</option>
+                                                            @foreach($mainproducts as $group => $items)
+                                                            <optgroup label="{{ $group }}">
+                                                                @foreach($items as $p)
+                                                                <option value="{{ $p['pid'] }}"
+                                                                    @selected($p['pid']==($latestProduct['pid'] ?? 0))>
+                                                                    {{ $p['name'] }}
+                                                                </option>
+                                                                @endforeach
+                                                            </optgroup>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+
+                                                    {{-- Qty --}}
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Quantity</label>
+                                                        <input type="number" value="{{ $latestProduct['qty'] ?? 1 }}"
+                                                            class="form-control" disabled>
+                                                        <input type="hidden" name="qty"
+                                                            value="{{ $latestProduct['qty'] }}">
+                                                    </div>
+
+                                                    {{-- First Payment --}}
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">First Payment Amount</label>
+                                                        <input type="text" name="firstpaymentamount"
+                                                            value="{{ $latestProduct['firstpaymentamount'] ?? '1.00' }}"
+                                                            class="form-control">
+                                                    </div>
+
+                                                    {{-- Recurring --}}
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Recurring Amount</label>
+                                                        <div class="input-group">
+                                                            <input type="text" name="recurringamount"
+                                                                value="{{ $latestProduct['recurringamount'] ?? '0.00' }}"
+                                                                class="form-control">
+                                                            <span class="input-group-text bg-white">
+                                                                <div class="form-check form-switch m-0">
+                                                                    <input class="form-check-input" type="checkbox"
+                                                                        id="inputAutorecalc" name="autorecalc"
+                                                                        value="1">
+                                                                    <label class="form-check-label small"
+                                                                        for="inputAutorecalc">Auto</label>
+                                                                </div>
+                                                            </span>
+                                                        </div>
+                                                        <div class="form-text">Recalculate on Save</div>
+                                                    </div>
+
+                                                    {{-- Domain --}}
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Domain</label>
+                                                        <div class="input-group">
+                                                            <input type="text" name="domain"
+                                                                value="{{ $latestProduct['domain'] ?? 'abcgmail.com' }}"
+                                                                class="form-control">
+                                                            <button class="btn btn-outline-secondary dropdown-toggle"
+                                                                type="button" data-bs-toggle="dropdown"></button>
+                                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                                <li><a class="dropdown-item"
+                                                                        href="https://{{$latestProduct['domain']}}"
+                                                                        target="_blank">www</a></li>
+                                                                <li><a class="dropdown-item" href="#"
+                                                                        onclick="document.getElementById('frmWhois').submit();return false;">whois</a>
+                                                                </li>
+                                                                <li><a class="dropdown-item"
+                                                                        href="https://intodns.com/{{ $latestProduct['domain'] }}"
+                                                                        target="_blank">intoDNS</a></li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Next Due --}}
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Next Due Date</label>
+                                                        <input type="text" name="nextduedate"
+                                                            value="{{ $latestProduct['nextduedate'] ?? '17/02/2026' }}"
+                                                            class="form-control">
+                                                    </div>
+
+                                                    {{-- Billing Cycle --}}
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Billing Cycle</label>
+                                                        <select name="billingcycle" class="form-select">
+                                                            @foreach([
+                                                            'Free Account'=>'Free',
+                                                            'One Time'=>'One Time',
+                                                            'Monthly'=>'Monthly',
+                                                            'Quarterly'=>'Quarterly',
+                                                            'Semi-Annually'=>'Semi-Annually',
+                                                            'Annually'=>'Annually',
+                                                            'Biennially'=>'Biennially',
+                                                            'Triennially'=>'Triennially',
+                                                            ] as $val => $label)
+                                                            <option value="{{ $val }}"
+                                                                @selected(($latestProduct['billingcycle'] )==$val)>
+                                                                {{ $label }}
+                                                            </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+
+                                                    {{-- Payment Method --}}
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Payment Method</label>
+                                                        <select name="paymentmethod" class="form-control select-inline">
+                                                            @foreach($paymethodMethods as $m)
+                                                            <option value="{{ $m['module'] ?? $m['displayname'] }}"
+                                                                @selected(($service['paymentmethod'] ?? ''
+                                                                )==($m['module'] ?? $m['displayname']))>
+                                                                {{ $m['displayname'] ?? $m['module'] }}
+                                                            </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+
+                                                    {{-- Status --}}
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Status</label>
+                                                        <select name="status" class="form-control select-inline"
+                                                            id="prodstatus">
+                                                            <option value="Pending"
+                                                                @selected($latestProduct['status']=='Pending' )>Pending
+                                                            </option>
+                                                            <option value="Active"
+                                                                @selected($latestProduct['status']=='Active' )>Active
+                                                            </option>
+                                                            <option value="Completed"
+                                                                @selected($latestProduct['status']=='Completed' )>
+                                                                Completed</option>
+                                                            <option value="Suspended"
+                                                                @selected($latestProduct['status']=='Suspended' )>
+                                                                Suspended</option>
+                                                            <option value="Terminated"
+                                                                @selected($latestProduct['status']=='Terminated' )>
+                                                                Terminated</option>
+                                                            <option value="Cancelled"
+                                                                @selected($latestProduct['status']=='Cancelled' )>
+                                                                Cancelled</option>
+                                                            <option value="Fraud">Fraud</option>
+                                                        </select>
+                                                    </div>
+
+                                                    {{-- Dedicated IP --}}
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Dedicated IP</label>
+                                                        <input type="text" name="dedicatedip"
+                                                            value="{{ $latestProduct['dedicatedip'] ?? '' }}"
+                                                            class="form-control">
+                                                    </div>
+
+                                                    {{-- Notes --}}
+                                                    <div class="col-12">
+                                                        <label class="form-label">Admin Notes</label>
+                                                        <textarea name="notes" rows="4"
+                                                            class="form-control">{{ $latestProduct['notes'] ?? '' }}</textarea>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+                                            <div class="card-footer bg-white d-flex justify-content-end gap-2">
+                                                <button class="btn btn-primary" type="submit">
+                                                    Save Changes
+                                                </button>
+                                                <button class="btn btn-outline-secondary" type="reset">
+                                                    Cancel Changes
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+
                                 </div>
                             </div>
 
-
-
-
-                            {{-- MAIN LAYOUT: Left Form + Right Sidebar --}}
-
-
-                            
+                            {{-- WHOIS Form --}}
+                            <form method="post" action="whois.php" target="_blank" id="frmWhois" class="d-none">
+                                @csrf
+                                <input type="hidden" name="domain" value="{{ $service['domain'] ?? 'abcgmail.com' }}">
+                            </form>
                         </div>
 
                     </div>
