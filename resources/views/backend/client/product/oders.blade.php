@@ -595,7 +595,41 @@
                     @include('backend.client.nav')
                     <!--/ Navbar pills -->
 
-                    <!-- User Profile Content -->
+                    @if ($productsclient == [])
+
+                    <div class="row">
+                        <div class="col-md-12 col-lg-12 col-xl-12">
+                            <!-- About User -->
+                            <div class="card mb-6">
+                                <div class="card-body">
+                                    <div class="tab-pane fade show active" id="profileContent">
+                                        <div class="card border-0 shadow-sm">
+                                            <div class="card-body text-center py-5">
+
+                                                <i class="bi bi-box-seam display-6 text-muted mb-3"></i>
+
+                                                <h5 class="fw-semibold mb-2">No Products / Services</h5>
+
+                                                <p class="text-muted mb-3">
+                                                    This user currently has no active products or services.
+                                                </p>
+
+                                                <a href="{{route('admin.orders.create', ['clientId' => $client['id']])}}"
+                                                    class="btn btn-primary btn-sm">
+                                                    <i class="bi bi-plus-circle me-1"></i>
+                                                    Place New Order
+                                                </a>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    @else
+
                     <div class="row">
                         <div class="col-md-12 col-lg-12 col-xl-12">
                             <!-- About User -->
@@ -613,19 +647,18 @@
                                                 <input type="hidden" name="userid" value="{{ $userid ?? 7 }}">
 
                                                 @php
-                                                    $latestId = collect($productsclient)->last()['id'] ?? null;
+                                                $latestId = collect($productsclient)->last()['id'] ?? null;
+                                                // dd($latestId);
                                                 @endphp
 
-                                                <select name="productselect"
-                                                        class="form-select"
-                                                        style="max-width: 560px;"
-                                                        onchange="this.form.submit()">
+                                                <select name="productselect" class="form-select"
+                                                    style="max-width: 560px;" onchange="this.form.submit()">
 
                                                     @foreach($productsclient as $s)
-                                                        <option value="{{ $s['id'] }}"
-                                                                @selected($s['id'] == $latestId)>
-                                                            {{ $s['name'] }} - {{ $s['domain'] }}
-                                                        </option>
+                                                    <option value="{{ $s['id'] }}"
+                                                        @selected($s['id']==$latestProduct['id'])>
+                                                        {{ $s['name'] }} - {{ $s['domain'] }} - {{ $s['id'] }}
+                                                    </option>
                                                     @endforeach
 
                                                 </select>
@@ -733,10 +766,10 @@
                                 {{-- LEFT: SERVICE FORM --}}
                                 <div class="col-xl-8">
 
-                                    <form method="post" action="?userid={{ $userid ?? 7 }}&id={{ $serviceId ?? 5 }}"
-                                        id="frm1">
+                                    <form method="post" action="{{route('admin.users.product.update')}}" id="frm1">
                                         @csrf
-
+                                        <input type="hidden" name="serviceid" value="{{ $latestProduct['id'] }}">
+                                        <input type="hidden" name="clientid" value="{{ $latestProduct['clientid'] }}">
                                         {{-- Service Details --}}
                                         <div class="card shadow-sm mb-3">
                                             <div
@@ -745,7 +778,8 @@
                                                     Service Details
                                                 </div>
                                                 <div class="small text-muted">
-                                                    Service ID: <span class="fw-semibold">{{ $serviceId ?? 5 }}</span>
+                                                    Service ID: <span
+                                                        class="fw-semibold">{{ $latestProduct['orderid'] ?? 5 }}</span>
                                                 </div>
                                             </div>
 
@@ -756,10 +790,9 @@
                                                     <div class="col-md-6">
                                                         <label class="form-label">Order</label>
                                                         <div class="form-control bg-light">
-                                                            {{ $service['orderid'] ?? 7 }}
+                                                            {{ $latestProduct['orderid'] ?? 7 }}
                                                             -
-                                                            <a
-                                                                href="orders.php?action=view&id={{ $service['orderid'] ?? 7 }}">View
+                                                            <a href="#">View
                                                                 Order</a>
                                                         </div>
                                                     </div>
@@ -768,23 +801,22 @@
                                                     <div class="col-md-6">
                                                         <label class="form-label">Registration Date</label>
                                                         <input type="text" name="regdate"
-                                                            value="{{ $service['regdate'] ?? '17/02/2026' }}"
+                                                            value="{{ $latestProduct['regdate'] ?? '17/02/2026' }}"
                                                             class="form-control">
                                                     </div>
 
                                                     {{-- Product --}}
                                                     <div class="col-md-6">
                                                         <label class="form-label">Product / Service</label>
-                                                        <select name="packageid" class="form-select"
-                                                            onchange="submitServiceChange()">
-                                                            @foreach(($productsGrouped ?? ['Drew Ashley'=>[
-                                                            ['pid'=>1,'name'=>'Olga Hudson'],
-                                                            ['pid'=>2,'name'=>'Maxwell Clark'],
-                                                            ]]) as $group => $items)
+                                                        <select name="pid[]" id="pid0"
+                                                            class="form-control select-inline pid"
+                                                            onchange="loadproductoptions(this)">
+                                                            <option value="">None</option>
+                                                            @foreach($mainproducts as $group => $items)
                                                             <optgroup label="{{ $group }}">
                                                                 @foreach($items as $p)
                                                                 <option value="{{ $p['pid'] }}"
-                                                                    @selected(($service['packageid'] ?? 2)==$p['pid'])>
+                                                                    @selected($p['pid']==($latestProduct['pid'] ?? 0))>
                                                                     {{ $p['name'] }}
                                                                 </option>
                                                                 @endforeach
@@ -796,17 +828,17 @@
                                                     {{-- Qty --}}
                                                     <div class="col-md-6">
                                                         <label class="form-label">Quantity</label>
-                                                        <input type="number" value="{{ $service['qty'] ?? 1 }}"
+                                                        <input type="number" value="{{ $latestProduct['qty'] ?? 1 }}"
                                                             class="form-control" disabled>
                                                         <input type="hidden" name="qty"
-                                                            value="{{ $service['qty'] ?? 1 }}">
+                                                            value="{{ $latestProduct['qty'] }}">
                                                     </div>
 
                                                     {{-- First Payment --}}
                                                     <div class="col-md-6">
                                                         <label class="form-label">First Payment Amount</label>
                                                         <input type="text" name="firstpaymentamount"
-                                                            value="{{ $service['firstpaymentamount'] ?? '1.00' }}"
+                                                            value="{{ $latestProduct['firstpaymentamount'] ?? '1.00' }}"
                                                             class="form-control">
                                                     </div>
 
@@ -814,8 +846,8 @@
                                                     <div class="col-md-6">
                                                         <label class="form-label">Recurring Amount</label>
                                                         <div class="input-group">
-                                                            <input type="text" name="amount"
-                                                                value="{{ $service['amount'] ?? '0.00' }}"
+                                                            <input type="text" name="recurringamount"
+                                                                value="{{ $latestProduct['recurringamount'] ?? '0.00' }}"
                                                                 class="form-control">
                                                             <span class="input-group-text bg-white">
                                                                 <div class="form-check form-switch m-0">
@@ -835,19 +867,19 @@
                                                         <label class="form-label">Domain</label>
                                                         <div class="input-group">
                                                             <input type="text" name="domain"
-                                                                value="{{ $service['domain'] ?? 'abcgmail.com' }}"
+                                                                value="{{ $latestProduct['domain'] ?? 'abcgmail.com' }}"
                                                                 class="form-control">
                                                             <button class="btn btn-outline-secondary dropdown-toggle"
                                                                 type="button" data-bs-toggle="dropdown"></button>
                                                             <ul class="dropdown-menu dropdown-menu-end">
                                                                 <li><a class="dropdown-item"
-                                                                        href="https://{{ $domain }}"
+                                                                        href="https://{{$latestProduct['domain']}}"
                                                                         target="_blank">www</a></li>
                                                                 <li><a class="dropdown-item" href="#"
                                                                         onclick="document.getElementById('frmWhois').submit();return false;">whois</a>
                                                                 </li>
                                                                 <li><a class="dropdown-item"
-                                                                        href="https://intodns.com/{{ $domain }}"
+                                                                        href="https://intodns.com/{{ $latestProduct['domain'] }}"
                                                                         target="_blank">intoDNS</a></li>
                                                             </ul>
                                                         </div>
@@ -857,7 +889,7 @@
                                                     <div class="col-md-6">
                                                         <label class="form-label">Next Due Date</label>
                                                         <input type="text" name="nextduedate"
-                                                            value="{{ $service['nextduedate'] ?? '17/02/2026' }}"
+                                                            value="{{ $latestProduct['nextduedate'] ?? '17/02/2026' }}"
                                                             class="form-control">
                                                     </div>
 
@@ -876,8 +908,7 @@
                                                             'Triennially'=>'Triennially',
                                                             ] as $val => $label)
                                                             <option value="{{ $val }}"
-                                                                @selected(($service['billingcycle'] ?? 'One Time'
-                                                                )==$val)>
+                                                                @selected(($latestProduct['billingcycle'] )==$val)>
                                                                 {{ $label }}
                                                             </option>
                                                             @endforeach
@@ -887,29 +918,29 @@
                                                     {{-- Payment Method --}}
                                                     <div class="col-md-6">
                                                         <label class="form-label">Payment Method</label>
-                                                        <select name="paymentmethod" class="form-select">
-                                                            {{-- @foreach(($paymethodMethods ?? [
-                                        'mailin'=>'Mail In Payment',
-                                        'paypal_ppcpv'=>'PayPal',
-                                        'banktransfer'=>'Bank Transfer',
-                                    ]) as $k => $label)
-                                        <option value="{{ $k }}" @selected(($service['paymentmethod'] ??
-                                                            'paypal_ppcpv') == $k)>
-                                                            {{ $label }}
+                                                        <select name="paymentmethod" class="form-control select-inline">
+                                                            @foreach($paymethodMethods as $m)
+                                                            <option value="{{ $m['module'] ?? $m['displayname'] }}"
+                                                                @selected(($service['paymentmethod'] ?? ''
+                                                                )==($m['module'] ?? $m['displayname']))>
+                                                                {{ $m['displayname'] ?? $m['module'] }}
                                                             </option>
-                                                            @endforeach --}}
+                                                            @endforeach
                                                         </select>
                                                     </div>
 
                                                     {{-- Status --}}
                                                     <div class="col-md-6">
                                                         <label class="form-label">Status</label>
-                                                        <select name="domainstatus" class="form-select">
-                                                            @foreach(['Pending','Active','Completed','Suspended','Terminated','Cancelled','Fraud']
-                                                            as $st)
-                                                            <option value="{{ $st }}" @selected(($service['status']
-                                                                ?? 'Pending' )==$st)>{{ $st }}</option>
-                                                            @endforeach
+                                                        <select name="status" class="form-control select-inline"
+                                                            id="prodstatus">
+                                                            <option value="Pending" @selected($latestProduct['status'] == 'Pending')>Pending</option>
+                                                            <option value="Active" @selected($latestProduct['status'] == 'Active')>Active</option>
+                                                            <option value="Completed" @selected($latestProduct['status'] == 'Completed')>Completed</option>
+                                                            <option value="Suspended" @selected($latestProduct['status'] == 'Suspended')>Suspended</option>
+                                                            <option value="Terminated" @selected($latestProduct['status'] == 'Terminated')>Terminated</option>
+                                                            <option value="Cancelled" @selected($latestProduct['status'] == 'Cancelled')>Cancelled</option>
+                                                            <option value="Fraud">Fraud</option>
                                                         </select>
                                                     </div>
 
@@ -917,7 +948,7 @@
                                                     <div class="col-md-6">
                                                         <label class="form-label">Dedicated IP</label>
                                                         <input type="text" name="dedicatedip"
-                                                            value="{{ $service['dedicatedip'] ?? '' }}"
+                                                            value="{{ $latestProduct['dedicatedip'] ?? '' }}"
                                                             class="form-control">
                                                     </div>
 
@@ -925,7 +956,7 @@
                                                     <div class="col-12">
                                                         <label class="form-label">Admin Notes</label>
                                                         <textarea name="notes" rows="4"
-                                                            class="form-control">{{ $service['notes'] ?? '' }}</textarea>
+                                                            class="form-control">{{ $latestProduct['notes'] ?? '' }}</textarea>
                                                     </div>
 
                                                 </div>
@@ -940,158 +971,7 @@
                                                 </button>
                                             </div>
                                         </div>
-
-                                        {{-- Module Commands --}}
-                                        <div class="card shadow-sm mb-3">
-                                            <div class="card-header bg-white fw-semibold">Module Commands</div>
-                                            <div class="card-body">
-                                                <div class="d-flex flex-wrap gap-2">
-                                                    <button type="button" class="btn btn-outline-secondary"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#modalModuleCreate">Create</button>
-                                                    <button type="button" class="btn btn-outline-secondary"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#modalModuleSuspend">Suspend</button>
-                                                    <button type="button" class="btn btn-outline-secondary"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#modalModuleUnsuspend">Unsuspend</button>
-                                                    <button type="button" class="btn btn-outline-secondary"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#modalModuleTerminate">Terminate</button>
-                                                    <button type="button" class="btn btn-outline-secondary"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#modalModuleChangePackage">Change
-                                                        Package</button>
-                                                    <button type="button" class="btn btn-outline-secondary"
-                                                        onclick="runModuleCommand('changepw')">Change Password</button>
-                                                </div>
-
-                                                <div class="mt-3 small text-muted">
-                                                    Module output will appear here...
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {{-- Addons Table --}}
-                                        <div class="card shadow-sm">
-                                            <div class="card-header bg-white fw-semibold">Addons</div>
-                                            <div class="card-body p-0">
-                                                <div class="table-responsive">
-                                                    <table class="table table-striped table-hover mb-0">
-                                                        <thead class="table-light">
-                                                            <tr>
-                                                                <th>Reg Date</th>
-                                                                <th>Name</th>
-                                                                <th>Pricing</th>
-                                                                <th>Status</th>
-                                                                <th>Next Due Date</th>
-                                                                <th style="width:60px"></th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @forelse(($addons ?? []) as $ad)
-                                                            <tr>
-                                                                <td>{{ $ad['regdate'] ?? '-' }}</td>
-                                                                <td>{{ $ad['name'] ?? '-' }}</td>
-                                                                <td>{{ $ad['pricing'] ?? '-' }}</td>
-                                                                <td><span
-                                                                        class="badge bg-secondary">{{ $ad['status'] ?? '-' }}</span>
-                                                                </td>
-                                                                <td>{{ $ad['nextduedate'] ?? '-' }}</td>
-                                                                <td class="text-end">
-                                                                    <a class="btn btn-sm btn-outline-secondary"
-                                                                        href="#">View</a>
-                                                                </td>
-                                                            </tr>
-                                                            @empty
-                                                            <tr>
-                                                                <td colspan="6" class="text-center text-muted py-4">
-                                                                    No Records Found
-                                                                </td>
-                                                            </tr>
-                                                            @endforelse
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-
                                     </form>
-
-                                </div>
-
-                                {{-- RIGHT: SIDEBAR --}}
-                                <div class="col-xl-4">
-
-                                    {{-- Summary --}}
-                                    <div class="card shadow-sm mb-3">
-                                        <div class="card-header bg-white fw-semibold">Summary</div>
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between">
-                                                <span class="text-muted">Domain</span>
-                                                <span
-                                                    class="fw-semibold">{{ $service['domain'] ?? 'abcgmail.com' }}</span>
-                                            </div>
-                                            <hr>
-                                            <div class="d-flex justify-content-between">
-                                                <span class="text-muted">Status</span>
-                                                <span
-                                                    class="badge bg-warning text-dark">{{ $service['status'] ?? 'Pending' }}</span>
-                                            </div>
-                                            <div class="d-flex justify-content-between mt-2">
-                                                <span class="text-muted">Billing</span>
-                                                <span
-                                                    class="fw-semibold">{{ $service['billingcycle'] ?? 'One Time' }}</span>
-                                            </div>
-                                            <div class="d-flex justify-content-between mt-2">
-                                                <span class="text-muted">Payment</span>
-                                                <span
-                                                    class="fw-semibold">{{ $service['paymentmethod'] ?? 'paypal_ppcpv' }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {{-- Subscription --}}
-                                    <div class="card shadow-sm mb-3">
-                                        <div class="card-header bg-white fw-semibold">Subscription</div>
-                                        <div class="card-body">
-                                            <label class="form-label">Subscription ID</label>
-                                            <input type="text" class="form-control" name="subscriptionid"
-                                                value="{{ $service['subscriptionid'] ?? '' }}">
-                                        </div>
-                                    </div>
-
-                                    {{-- Auto Suspend --}}
-                                    <div class="card shadow-sm mb-3">
-                                        <div class="card-header bg-white fw-semibold">Auto Suspend</div>
-                                        <div class="card-body">
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" id="overrideautosuspend"
-                                                    name="overideautosuspend" value="1">
-                                                <label class="form-check-label" for="overrideautosuspend">Do not suspend
-                                                    until</label>
-                                            </div>
-                                            <input type="text" class="form-control" name="overidesuspenduntil"
-                                                value="{{ $service['overidesuspenduntil'] ?? '' }}"
-                                                placeholder="YYYY-MM-DD">
-                                        </div>
-                                    </div>
-
-                                    {{-- Auto Terminate --}}
-                                    <div class="card shadow-sm">
-                                        <div class="card-header bg-white fw-semibold">Auto Terminate</div>
-                                        <div class="card-body">
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox"
-                                                    id="autoterminateendcycle" name="autoterminateendcycle" value="1">
-                                                <label class="form-check-label"
-                                                    for="autoterminateendcycle">Auto-Terminate End of Cycle</label>
-                                            </div>
-                                            <label class="form-label">Reason</label>
-                                            <input type="text" class="form-control" name="autoterminatereason"
-                                                value="{{ $service['autoterminatereason'] ?? '' }}">
-                                        </div>
-                                    </div>
 
                                 </div>
                             </div>
@@ -1104,6 +984,10 @@
                         </div>
 
                     </div>
+
+                    @endif
+                    <!-- User Profile Content -->
+
                     <!--/ User Profile Content -->
                 </div>
                 <!-- / Content -->

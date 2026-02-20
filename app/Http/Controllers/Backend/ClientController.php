@@ -576,9 +576,15 @@ class ClientController extends Controller
             'limitnum'   => 50,
         ]);
 
+        // dd($respclientproducts);
         // dd($resp);
         $clientId = request()->route('clientId');
         $productsclient = $respclientproducts['products']['product'] ?? [];
+        $latestProduct = collect($productsclient)
+                        ->sortByDesc('id')
+                        ->first();
+
+        // dd($latestProduct);
 
 
         // dd($products);
@@ -614,22 +620,8 @@ class ClientController extends Controller
         // dd($products, $client, $clientId, $clients, $paymethodMethods, $mainproducts);
 
 
-        if ($productsclient === []) {
-            // dd($productsclient);
-        return view('backend.client.product.index', [
-                        'products'          => $products,
-                        'client'            => $client,
-                        'clientId'          => $clientId,
-                        'clients'           => $clients,
-                        'paymethodMethods'  => $paymethodMethods,
-                        'mainproducts'      => $grouped,
-                        'productsclient'    => $productsclient,
-                    ]);
-            }else{
 
-            dd($productsclient);
-
-
+        // dd($productsclient);
             return view('backend.client.product.oders', [
                 'products'          => $products,
                 'client'            => $client,
@@ -638,8 +630,9 @@ class ClientController extends Controller
                 'paymethodMethods'  => $paymethodMethods,
                 'mainproducts'      => $grouped,
                 'productsclient'    => $productsclient,
+                'latestProduct'    => $latestProduct,
             ]);
-            }
+
     }
 
 
@@ -694,17 +687,13 @@ class ClientController extends Controller
         ]);
         // dd($respaproduct);
         $mainproducts = $respaproduct['products']['product'] ?? [];
-
-        // ধরেন $mainproducts = $resp['products']['product'] বা আপনার যেভাবে আসছে
         $products = $mainproducts;
 
-        // group name বের করতে map বানান (WHMCS API GetProducts -> productgroups থেকে পাওয়া যায়)
         $groupMap = [];
         foreach (($respaproduct['productgroups']['group'] ?? []) as $g) {
             $groupMap[$g['gid']] = $g['name'];
         }
 
-        // gid অনুযায়ী group
         $grouped = [];
         foreach ($products as $p) {
             $gid = $p['gid'] ?? 0;
@@ -931,6 +920,55 @@ class ClientController extends Controller
             ->route('admin.users.products', ['clientId' => $request->input('clientid')])
             ->with('success', 'Order Created Successfully!')
             ->with('whmcs', $resp);
+    }
+
+
+
+    public function UpdateClientProduct(Request $request, WhmcsService $whmcs)
+    {
+        // dd($request->all());
+        $request->validate([
+            'billingcycle' => 'required|string',
+            'status'       => 'required|string',
+            'nextduedate'  => 'required|date',
+        ]);
+
+        $payload = [
+            'serviceid'          => $request->input('serviceid'),
+            'regdate'            => $request->input('regdate'),
+            'pid'                => $request->input('pid'),
+            'qty'                => $request->input('qty'),
+
+            'firstpaymentamount' => $request->input('firstpaymentamount'),
+            'recurringamount'    => $request->input('recurringamount'),
+
+            'domain'             => $request->input('domain'),
+            'nextduedate'        => $request->input('nextduedate'),
+            'billingcycle'       => $request->input('billingcycle'),
+
+            'paymentmethod'      => $request->input('paymentmethod'),
+            'status'             => $request->input('status'),
+
+            'dedicatedip'        => $request->input('dedicatedip'),
+            'notes'              => $request->input('notes'),
+        ];
+
+        // dd
+        // dd($payload);
+        if ($request->filled('priceoverride')) {
+            $payload['priceoverride'] = is_numeric($request->input('priceoverride')) ? (float)$request->input('priceoverride') : 0;
+        }
+
+        // dd($payload);
+
+        $resp = $whmcs->call('UpdateClientProduct', $payload);
+
+        if (($resp['result'] ?? '') !== 'success') {
+            return back()->withInput()->with('error', $resp['message'] ?? 'Product update failed')->with('whmcs', $resp);
+        }
+
+        // dd($resp);
+        return back()->with('success', 'Product updated successfully')->with('whmcs', $resp);
     }
 
 
