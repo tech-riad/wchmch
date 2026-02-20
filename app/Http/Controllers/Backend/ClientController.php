@@ -924,71 +924,60 @@ class ClientController extends Controller
 
     public function clientProductShow(WhmcsService $whmcs, Request $request)
     {
+        $clientId  = (int) $request->route('clientid');
+        $productId = (string) $request->route('productid');
 
-     $clientId = $request->clientid;
-     $serviceid = $request->serviceid;
-
-
-
-
-     // Client details
         $clientResp = $whmcs->call('GetClientsDetails', [
-            'clientid' => (int)$clientId,
+            'clientid' => $clientId,
         ]);
-        // dd($clientResp);
-
         $client = $clientResp['client'] ?? [];
-        // comment ------------------------------------------------
+
+        if (!isset($client['id']) && isset($client['userid'])) {
+            $client['id'] = $client['userid'];
+        }
 
         $resp = $whmcs->call('GetClients', [
             'limitstart' => 0,
             'limitnum'   => 50,
         ]);
         $clients = $resp['clients']['client'] ?? [];
-        // dd($clients);
 
-        // single client normalize
         if (!empty($clients) && isset($clients['id'])) {
             $clients = [$clients];
         }
-        // dd($client);
 
-
-        ###
         $respclientproducts = $whmcs->call('GetClientsProducts', [
-            'clientid' => (int)$clientId,
-            'limitstart' => 0,
-            'limitnum'   => 50,
+            'clientid'    => $clientId,
+            'limitstart'  => 0,
+            'limitnum'    => 50,
         ]);
 
-        // dd($respclientproducts);
-        // dd($resp);
-        $clientId = request()->route('clientId');
         $productsclient = $respclientproducts['products']['product'] ?? [];
-        $latestProduct = collect($productsclient)
-                        ->sortByDesc('id')
-                        ->first();
 
-        // dd($latestProduct);
+        if (!empty($productsclient) && isset($productsclient['id'])) {
+            $productsclient = [$productsclient];
+        }
 
-
-        // dd($products);
+        $latestProduct = collect($productsclient)->firstWhere('id', $productId)
+            ?? collect($productsclient)->firstWhere('serviceid', $productId)
+            ?? collect($productsclient)->sortByDesc('id')->first();
 
         $paymentMethodApi = $whmcs->call('GetPaymentMethods', [
             'limitstart' => 0,
             'limitnum'   => 50,
         ]);
+        $paymethodMethods = $paymentMethodApi['paymentmethods']['paymentmethod'] ?? [];
 
         $respaproduct = $whmcs->call('GetProducts', [
             'limitstart' => 0,
             'limitnum'   => 50,
         ]);
-        // dd($respaproduct);
-        $mainproducts = $respaproduct['products']['product'] ?? [];
-        $products = $mainproducts;
+
+        $products = $respaproduct['products']['product'] ?? [];
+
         $groupMap = [];
         foreach (($respaproduct['productgroups']['group'] ?? []) as $g) {
-            $groupMap[$g['gid']] = $g['name'];
+            $groupMap[$g['gid']] = $g['name'] ?? ('Group #'.$g['gid']);
         }
 
         $grouped = [];
@@ -997,45 +986,43 @@ class ClientController extends Controller
             $groupName = $groupMap[$gid] ?? ('Group #'.$gid);
             $grouped[$groupName][] = $p;
         }
-        // dd($mainproducts);
 
-
-        // dd($paymentMethodApi);
-        $paymethodMethods = $paymentMethodApi['paymentmethods']['paymentmethod']?? [];
-        // dd($products, $client, $clientId, $clients, $paymethodMethods, $mainproducts);
-
-
-
-        // dd($productsclient);
-            return view('backend.client.product.show', [
-                'products'          => $products,
-                'client'            => $client,
-                'clientId'          => $clientId,
-                'clients'           => $clients,
-                'paymethodMethods'  => $paymethodMethods,
-                'mainproducts'      => $grouped,
-                'productsclient'    => $productsclient,
-                'latestProduct'    => $latestProduct,
-            ]);
-
-
+        return view('backend.client.product.show', [
+            'products'         => $products,
+            'client'           => $client,
+            'clientId'         => $clientId,
+            'productId'        => $productId,
+            'clients'          => $clients,
+            'paymethodMethods' => $paymethodMethods,
+            'mainproducts'     => $grouped,
+            'productsclient'   => $productsclient,
+            'latestProduct'    => $latestProduct,
+        ]);
     }
 
 
 
     public function UpdateClientProduct(Request $request, WhmcsService $whmcs)
     {
-        // dd($request->all());
+        $clientId  = (int) $request->input('clientid');
+        $serviceId = (string) $request->input('serviceid');
+
         $request->validate([
             'billingcycle' => 'required|string',
             'status'       => 'required|string',
             'nextduedate'  => 'required|date',
         ]);
 
+        // pid[] fix
+        $pid = $request->input('pid');
+        if (is_array($pid)) {
+            $pid = $pid[0] ?? null;
+        }
+
         $payload = [
-            'serviceid'          => $request->input('serviceid'),
+            'serviceid'          => $serviceId,
             'regdate'            => $request->input('regdate'),
-            'pid'                => $request->input('pid'),
+            'pid'                => $pid,
             'qty'                => $request->input('qty'),
 
             'firstpaymentamount' => $request->input('firstpaymentamount'),
@@ -1052,23 +1039,27 @@ class ClientController extends Controller
             'notes'              => $request->input('notes'),
         ];
 
-        // dd
-        // dd($payload);
         if ($request->filled('priceoverride')) {
-            $payload['priceoverride'] = is_numeric($request->input('priceoverride')) ? (float)$request->input('priceoverride') : 0;
+            $payload['priceoverride'] = is_numeric($request->input('priceoverride'))
+                ? (float) $request->input('priceoverride')
+                : 0;
         }
-
-        // dd($payload);
 
         $resp = $whmcs->call('UpdateClientProduct', $payload);
 
         if (($resp['result'] ?? '') !== 'success') {
-            return back()->withInput()->with('error', $resp['message'] ?? 'Product update failed')->with('whmcs', $resp);
+            return back()
+                ->withInput()
+                ->with('error', $resp['message'] ?? 'Product update failed')
+                ->with('whmcs', $resp);
         }
 
-        // dd($resp);
-        return back()->with('success', 'Product updated successfully')->with('whmcs', $resp);
+        return back()
+                    ->with('success', 'Product updated successfully')
+                    ->with('whmcs', $resp);
     }
+
+
 
 
 

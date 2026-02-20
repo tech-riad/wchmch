@@ -542,373 +542,577 @@
             <!-- / Navbar -->
 
             <!-- Content wrapper -->
-
             <div class="content-wrapper">
-                <!-- Content -->
                 <div class="container-xxl flex-grow-1 container-p-y">
-                    <!-- Header -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card mb-6">
-                                {{-- <div class="user-profile-header-banner">
-                      <img src="../../assets/img/pages/profile-banner.png" alt="Banner image" class="rounded-top" />
-                    </div> --}}
-                                <div
-                                    class="user-profile-header d-flex flex-column flex-lg-row text-sm-start text-center mb-5">
-                                    <div class="flex-shrink-0 mt-n2 mx-sm-0 mx-auto">
-                                        <img src="../../assets/img/avatars/1.png" alt="user image"
-                                            class="d-block h-auto ms-0 ms-sm-6 rounded user-profile-img" />
-                                    </div>
-                                    <div class="flex-grow-1 mt-3 mt-lg-5">
-                                        <div
-                                            class="d-flex align-items-md-end align-items-sm-start align-items-center justify-content-md-between justify-content-start mx-5 flex-md-row flex-column gap-4">
-                                            <div class="user-profile-info">
-                                                <h4 class="mb-2 mt-lg-6">John Doe</h4>
-                                                <ul
-                                                    class="list-inline mb-0 d-flex align-items-center flex-wrap justify-content-sm-start justify-content-center gap-4 my-2">
-                                                    <li class="list-inline-item d-flex gap-2 align-items-center">
-                                                        <i class="icon-base ti tabler-palette icon-lg"></i><span
-                                                            class="fw-medium">UX Designer</span>
+
+                    <!-- ========== WHMCS PRODUCT MANAGE ========== -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h4>Manage Product/Service</h4>
+                        </div>
+                        <div class="card-body">
+                            <!-- main form -->
+                            <form method="post" action="{{ route('admin.users.product.update',['clientid'=>$latestProduct['clientid'], 'productid'=>$latestProduct['id']]) }}">
+                                @csrf
+
+                                <input type="hidden" name="serviceid" value="{{ $latestProduct['id'] }}">
+                                <input type="hidden" name="clientid" value="{{ $latestProduct['clientid'] }}">
+
+                                <table class="form" width="100%" border="0" cellspacing="2" cellpadding="3">
+
+                                    <!-- row 1 -->
+                                    <tr>
+                                        <td class="fieldlabel" width="20%">Order #</td>
+                                        <td class="fieldarea" width="30%">
+                                            {{ $latestProduct['orderid'] ?? 7 }} - <a href="#">View Order</a>
+                                        </td>
+                                        <td class="fieldlabel" width="20%">Registration Date</td>
+                                        <td class="fieldarea" width="30%">
+                                            <div class="form-group date-picker-prepend-icon">
+                                                <label for="inputRegdate" class="field-icon">
+                                                    <i class="fal fa-calendar-alt"></i>
+                                                </label>
+                                                <input type="date" name="regdate"
+                                                    value="{{ $latestProduct['regdate'] ?? '2026-02-17' }}" size="12"
+                                                    class="form-control date-picker-single" id="inputRegdate" />
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <!-- row 2 -->
+                                    <tr>
+                                        <td class="fieldlabel" rowspan="2" width="20%">Product/Service</td>
+                                        <td class="fieldarea" width="30%" rowspan="2">
+                                            <input type="hidden" name="oldpackageid"
+                                                value="{{ $latestProduct['pid'] ?? '' }}" />
+
+                                            <select name="pid[]" id="pid0" class="form-control select-inline-long pid"
+                                                onchange="loadproductoptions(this)">
+                                                <option value="">None</option>
+
+                                                @foreach($mainproducts as $group => $items)
+                                                <optgroup label="{{ $group }}">
+                                                    @foreach($items as $p)
+                                                    <option value="{{ $p['pid'] }}" @selected(($p['pid'] ??
+                                                        null)==($latestProduct['pid'] ?? null))>
+                                                        {{ $p['name'] }}
+                                                    </option>
+                                                    @endforeach
+                                                </optgroup>
+                                                @endforeach
+                                            </select>
+                                        </td>
+
+                                        <td class="fieldlabel" width="20%">Quantity</td>
+                                        <td class="fieldarea" width="30%">
+                                            <input type="hidden" name="qty" value="{{ $latestProduct['qty'] ?? 1 }}" />
+                                            <input type="number" name="qty" value="{{ $latestProduct['qty'] ?? 1 }}"
+                                                size="30" disabled="disabled" class="form-control input-100"
+                                                id="inputQty" />
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td class="fieldlabel" width="20%">First Payment Amount</td>
+                                        <td class="fieldarea" width="30%">
+                                            <input type="text" name="firstpaymentamount"
+                                                value="{{ $latestProduct['firstpaymentamount'] ?? '1.00' }}" size="20"
+                                                class="form-control input-100" id="inputFirstpaymentamount" />
+                                        </td>
+                                    </tr>
+
+                                    <!-- row 3 -->
+                                    <tr>
+                                        <td class="fieldlabel" width="20%">Server</td>
+                                        <td class="fieldarea" width="30%">
+                                            <select name="server" onchange="submitServiceChange()"
+                                                class="form-control select-inline">
+                                                <option value="0" @selected(($latestProduct['serverid'] ?? 0)==0)>
+                                                    None
+                                                </option>
+
+                                                {{-- যদি তোমার servers list থাকে, এখানে loop করে option add করবে --}}
+                                                {{-- Example:
+                                    @foreach($servers as $srv)
+                                        <option value="{{ $srv['id'] }}" @selected(($latestProduct['serverid'] ?? 0) ==
+                                                $srv['id'])>
+                                                {{ $srv['name'] }}
+                                                </option>
+                                                @endforeach
+                                                --}}
+                                            </select>
+
+                                            {{-- server name show (UI change না করে small text) --}}
+                                            @if(!empty($latestProduct['servername']))
+                                            <div class="text-muted small mt-1">Current:
+                                                {{ $latestProduct['servername'] }}</div>
+                                            @endif
+                                        </td>
+
+                                        <td class="fieldlabel" width="20%">Recurring Amount</td>
+                                        <td class="fieldarea" width="30%">
+                                            <div style="width: 100%">
+                                                <div class="service-field-inline">
+                                                    <input type="text" name="recurringamount"
+                                                        value="{{ $latestProduct['recurringamount'] ?? '0.00' }}"
+                                                        size="20" class="form-control input-100" id="inputAmount" />
+                                                </div>
+                                                <div class="service-field-inline">
+                                                    <div class="font-mouse">Recalculate on Save</div>
+                                                    <div>
+                                                        <input type="checkbox" class="slide-toggle auto-recalc-checkbox"
+                                                            id="inputAutorecalc" name="autorecalc" data-size="mini"
+                                                            data-on-text="Yes" data-on-color="info"
+                                                            data-off-text="No" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <!-- row 4 -->
+                                    <tr>
+                                        <td class="fieldlabel" width="20%">Domain</td>
+                                        <td class="fieldarea" width="30%">
+                                            <div class="input-group input-300">
+                                                <input type="text" name="domain"
+                                                    value="{{ $latestProduct['domain'] ?? 'abcgmail.com' }}"
+                                                    class="form-control">
+                                                <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                                    data-bs-toggle="dropdown"></button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <a class="dropdown-item"
+                                                            href="https://{{ $latestProduct['domain'] ?? '' }}"
+                                                            target="_blank">www</a>
                                                     </li>
-                                                    <li class="list-inline-item d-flex gap-2 align-items-center">
-                                                        <i class="icon-base ti tabler-map-pin  icon-lg"></i><span
-                                                            class="fw-medium">Vatican City</span>
+                                                    <li>
+                                                        <a class="dropdown-item" href="https://who.is/"
+                                                           >whois</a>
                                                     </li>
-                                                    <li class="list-inline-item d-flex gap-2 align-items-center">
-                                                        <i class="icon-base ti tabler-calendar  icon-lg"></i><span
-                                                            class="fw-medium"> Joined April 2021</span>
+                                                    <li>
+                                                        <a class="dropdown-item"
+                                                            href="https://intodns.com/{{ $latestProduct['domain'] ?? '' }}"
+                                                            target="_blank">intoDNS</a>
                                                     </li>
                                                 </ul>
                                             </div>
-                                            <a href="javascript:void(0)" class="btn btn-primary mb-1">
-                                                <i class="icon-base ti tabler-user-check icon-xs me-2"></i>Connected
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!--/ Header -->
+                                        </td>
 
-                    <!-- Navbar pills -->
-                    @include('backend.client.nav')
-                    <!--/ Navbar pills -->
-
-                    @if ($productsclient == [])
-
-                    <div class="row">
-                        <div class="col-md-12 col-lg-12 col-xl-12">
-                            <!-- About User -->
-                            <div class="card mb-6">
-                                <div class="card-body">
-                                    <div class="tab-pane fade show active" id="profileContent">
-                                        <div class="card border-0 shadow-sm">
-                                            <div class="card-body text-center py-5">
-
-                                                <i class="bi bi-box-seam display-6 text-muted mb-3"></i>
-
-                                                <h5 class="fw-semibold mb-2">No Products / Services</h5>
-
-                                                <p class="text-muted mb-3">
-                                                    This user currently has no active products or services.
-                                                </p>
-
-                                                <a href="{{route('admin.orders.create', ['clientId' => $client['id']])}}"
-                                                    class="btn btn-primary btn-sm">
-                                                    <i class="bi bi-plus-circle me-1"></i>
-                                                    Place New Order
-                                                </a>
-
+                                        <td class="fieldlabel" width="20%">Next Due Date</td>
+                                        <td class="fieldarea" width="30%">
+                                            <input type="hidden" name="oldnextduedate"
+                                                value="{{ $latestProduct['nextduedate'] ?? '' }}" />
+                                            <div class="form-group date-picker-prepend-icon">
+                                                <label for="inputNextduedate" class="field-icon">
+                                                    <i class="fal fa-calendar-alt"></i>
+                                                </label>
+                                                <input type="text" name="nextduedate"
+                                                    value="{{ $latestProduct['nextduedate'] ?? '2026-02-17' }}"
+                                                    size="12" class="form-control date-picker-single future"
+                                                    id="inputNextduedate" />
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                                            <span id="notAvailableSpan">N/A</span>
+                                        </td>
+                                    </tr>
 
-                    </div>
-                    @else
+                                    <!-- row 5 -->
+                                    <tr>
+                                        <td class="fieldlabel" width="20%">Dedicated IP</td>
+                                        <td class="fieldarea" width="30%">
+                                            <input type="text" name="dedicatedip"
+                                                value="{{ $latestProduct['dedicatedip'] ?? '' }}" size="25"
+                                                class="form-control input-200" id="inputDedicatedip" />
+                                        </td>
 
-                    <div class="row">
-                        <div class="col-md-12 col-lg-12 col-xl-12">
-                            <!-- About User -->
-                            {{-- MAIN LAYOUT: Left Form + Right Sidebar --}}
-                            <div class="row g-3">
-
-                                {{-- LEFT: SERVICE FORM --}}
-                                <div class="col-xl-8">
-
-                                    <form method="post" action="{{route('admin.users.product.update')}}" id="frm1">
-                                        @csrf
-                                        <input type="hidden" name="serviceid" value="{{ $latestProduct['id'] }}">
-                                        <input type="hidden" name="clientid" value="{{ $latestProduct['clientid'] }}">
-                                        {{-- Service Details --}}
-                                        <div class="card shadow-sm mb-3">
-                                            <div
-                                                class="card-header bg-white d-flex align-items-center justify-content-between">
-                                                <div class="fw-semibold">
-                                                    Service Details
-                                                </div>
-                                                <div class="small text-muted">
-                                                    Service ID: <span
-                                                        class="fw-semibold">{{ $latestProduct['orderid'] ?? 5 }}</span>
-                                                </div>
+                                        <td class="fieldlabel" width="20%">Termination Date</td>
+                                        <td class="fieldarea" width="30%">
+                                            <div class="form-group date-picker-prepend-icon">
+                                                <label for="inputTermination_date" class="field-icon">
+                                                    <i class="fal fa-calendar-alt"></i>
+                                                </label>
+                                                <input type="text" name="termination_date"
+                                                    value="{{ $latestProduct['termination_date'] ?? '' }}" size="12"
+                                                    class="form-control date-picker-single"
+                                                    id="inputTermination_date" />
                                             </div>
+                                        </td>
+                                    </tr>
 
-                                            <div class="card-body">
-                                                <div class="row g-3">
+                                    <!-- row 6 -->
+                                    <tr>
+                                        <td class="fieldlabel" width="20%">Username</td>
+                                        <td class="fieldarea" width="30%">
+                                            <input type="text" name="username"
+                                                value="{{ $latestProduct['username'] ?? '' }}" size="20"
+                                                class="form-control input-200 input-inline" id="inputUsername" />
+                                        </td>
 
-                                                    {{-- Order --}}
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Order</label>
-                                                        <div class="form-control bg-light">
-                                                            {{ $latestProduct['orderid'] ?? 7 }}
-                                                            -
-                                                            <a href="#">View
-                                                                Order</a>
-                                                        </div>
-                                                    </div>
+                                        <td class="fieldlabel" width="20%">Billing Cycle</td>
+                                        <td class="fieldarea" width="30%">
+                                            <select name="billingcycle" class="form-control select-line">
+                                                @foreach([
+                                                'Free Account'=>'Free',
+                                                'One Time'=>'One Time',
+                                                'Monthly'=>'Monthly',
+                                                'Quarterly'=>'Quarterly',
+                                                'Semi-Annually'=>'Semi-Annually',
+                                                'Annually'=>'Annually',
+                                                'Biennially'=>'Biennially',
+                                                'Triennially'=>'Triennially',
+                                                ] as $val => $label)
+                                                <option value="{{ $val }}" @selected(($latestProduct['billingcycle']
+                                                    ?? '' )==$val)>
+                                                    {{ $label }}
+                                                </option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                    </tr>
 
-                                                    {{-- Reg Date --}}
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Registration Date</label>
-                                                        <input type="text" name="regdate"
-                                                            value="{{ $latestProduct['regdate'] ?? '17/02/2026' }}"
-                                                            class="form-control">
-                                                    </div>
+                                    <!-- row 7 -->
+                                    <tr>
+                                        <td class="fieldlabel" width="20%">Password</td>
+                                        <td class="fieldarea" width="30%">
+                                            <input type="text" name="password"
+                                                value="{{ $latestProduct['password'] ?? '' }}" size="20"
+                                                class="form-control input-200" id="inputPassword" />
+                                        </td>
 
-                                                    {{-- Product --}}
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Product / Service</label>
-                                                        <select name="pid[]" id="pid0"
-                                                            class="form-control select-inline pid"
-                                                            onchange="loadproductoptions(this)">
-                                                            <option value="">None</option>
-                                                            @foreach($mainproducts as $group => $items)
-                                                            <optgroup label="{{ $group }}">
-                                                                @foreach($items as $p)
-                                                                <option value="{{ $p['pid'] }}"
-                                                                    @selected($p['pid']==($latestProduct['pid'] ?? 0))>
-                                                                    {{ $p['name'] }}
-                                                                </option>
-                                                                @endforeach
-                                                            </optgroup>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
+                                        <td class="fieldlabel" width="20%">Payment Method</td>
+                                        <td class="fieldarea" width="30%">
+                                            <select name="paymentmethod" class="form-control select-inline">
+                                                @foreach($paymethodMethods as $m)
+                                                @php $val = $m['module'] ?? $m['displayname']; @endphp
+                                                <option value="{{ $val }}" @selected(($latestProduct['paymentmethod']
+                                                    ?? '' )==$val)>
+                                                    {{ $m['displayname'] ?? $val }}
+                                                </option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                    </tr>
 
-                                                    {{-- Qty --}}
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Quantity</label>
-                                                        <input type="number" value="{{ $latestProduct['qty'] ?? 1 }}"
-                                                            class="form-control" disabled>
-                                                        <input type="hidden" name="qty"
-                                                            value="{{ $latestProduct['qty'] }}">
-                                                    </div>
+                                    <!-- row 8 -->
+                                    <tr>
+                                        <td class="fieldlabel" width="20%">Status</td>
+                                        <td class="fieldarea" width="30%">
+                                            <select name="status" class="form-control select-inline" id="prodstatus">
+                                                @foreach(['Pending','Active','Completed','Suspended','Terminated','Cancelled','Fraud']
+                                                as $st)
+                                                <option value="{{ $st }}" @selected(($latestProduct['status'] ?? ''
+                                                    )==$st)>
+                                                    {{ $st }}
+                                                </option>
+                                                @endforeach
+                                            </select>
+                                        </td>
 
-                                                    {{-- First Payment --}}
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">First Payment Amount</label>
-                                                        <input type="text" name="firstpaymentamount"
-                                                            value="{{ $latestProduct['firstpaymentamount'] ?? '1.00' }}"
-                                                            class="form-control">
-                                                    </div>
+                                        <td class="fieldlabel" width="20%">
+                                            Promotion Code
+                                            <a href="#" data-toggle="tooltip" data-placement="bottom"
+                                                title="Change will not affect price"><i
+                                                    class="fa fa-info-circle"></i></a><br />
+                                        </td>
+                                        <td class="fieldarea" width="30%">
+                                            <div id="nonApplicablePromoWarning" class="alert alert-info text-center"
+                                                style="display: none;">
+                                                The promotion code that you selected is not usually applicable to this
+                                                service.
+                                            </div>
+                                            <div style="max-width:300px" class="form-field-width-container">
+                                                <select name="promoid"
+                                                    class="form-control select-inline selectize-promo" id="promoid">
+                                                    <option value="0" @selected((int)($latestProduct['promoid'] ??
+                                                        0)===0)>None</option>
 
-                                                    {{-- Recurring --}}
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Recurring Amount</label>
-                                                        <div class="input-group">
-                                                            <input type="text" name="recurringamount"
-                                                                value="{{ $latestProduct['recurringamount'] ?? '0.00' }}"
-                                                                class="form-control">
-                                                            <span class="input-group-text bg-white">
-                                                                <div class="form-check form-switch m-0">
-                                                                    <input class="form-check-input" type="checkbox"
-                                                                        id="inputAutorecalc" name="autorecalc"
-                                                                        value="1">
-                                                                    <label class="form-check-label small"
-                                                                        for="inputAutorecalc">Auto</label>
-                                                                </div>
-                                                            </span>
-                                                        </div>
-                                                        <div class="form-text">Recalculate on Save</div>
-                                                    </div>
+                                                    {{-- promo list থাকলে এখানে loop --}}
+                                                    {{-- Example:
+                                        @foreach($promos as $promo)
+                                          <option value="{{ $promo['id'] }}" @selected((int)($latestProduct['promoid']
+                                                    ?? 0) === (int)$promo['id'])>
+                                                    {{ $promo['code'] }}
+                                                    </option>
+                                                    @endforeach
+                                                    --}}
+                                                </select>
+                                            </div>
+                                        </td>
+                                    </tr>
 
-                                                    {{-- Domain --}}
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Domain</label>
-                                                        <div class="input-group">
-                                                            <input type="text" name="domain"
-                                                                value="{{ $latestProduct['domain'] ?? 'abcgmail.com' }}"
-                                                                class="form-control">
-                                                            <button class="btn btn-outline-secondary dropdown-toggle"
-                                                                type="button" data-bs-toggle="dropdown"></button>
-                                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                                <li><a class="dropdown-item"
-                                                                        href="https://{{$latestProduct['domain']}}"
-                                                                        target="_blank">www</a></li>
-                                                                <li><a class="dropdown-item" href="#"
-                                                                        onclick="document.getElementById('frmWhois').submit();return false;">whois</a>
-                                                                </li>
-                                                                <li><a class="dropdown-item"
-                                                                        href="https://intodns.com/{{ $latestProduct['domain'] }}"
-                                                                        target="_blank">intoDNS</a></li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
+                                    <!-- row 9 -->
+                                    <tr>
+                                        <td class="fieldlabel" width="20%">Module Commands</td>
+                                        <td class="fieldarea" colspan="3">
+                                            <div id="modcmdbtns">
+                                                <button type="button" class="btn btn-default"
+                                                    onclick="jQuery('#modalModuleCreate').modal('show');"
+                                                    id="btnCreate">Create</button>
+                                                <button type="button" class="btn btn-default"
+                                                    onclick="jQuery('#modalModuleSuspend').modal('show');"
+                                                    id="btnSuspend">Suspend</button>
+                                                <button type="button" class="btn btn-default"
+                                                    onclick="jQuery('#modalModuleUnsuspend').modal('show');"
+                                                    id="btnUnsuspend">Unsuspend</button>
+                                                <button type="button" class="btn btn-default"
+                                                    onclick="jQuery('#modalModuleTerminate').modal('show');"
+                                                    id="btnTerminate">Terminate</button>
+                                                <button type="button" class="btn btn-default"
+                                                    onclick="jQuery('#modalModuleChangePackage').modal('show');"
+                                                    id="btnChange_Package">Change Package</button>
+                                                <button type="button" class="btn btn-default"
+                                                    onclick="runModuleCommand('changepw')"
+                                                    id="btnChange_Password">Change Password</button>
+                                            </div>
+                                            <div id="modcmdworking" style="display:none;text-align:center;">
+                                                <img src="images/loader.gif" /> &nbsp; Working...
+                                            </div>
+                                        </td>
+                                    </tr>
 
-                                                    {{-- Next Due --}}
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Next Due Date</label>
-                                                        <input type="text" name="nextduedate"
-                                                            value="{{ $latestProduct['nextduedate'] ?? '17/02/2026' }}"
-                                                            class="form-control">
-                                                    </div>
-
-                                                    {{-- Billing Cycle --}}
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Billing Cycle</label>
-                                                        <select name="billingcycle" class="form-select">
-                                                            @foreach([
-                                                            'Free Account'=>'Free',
-                                                            'One Time'=>'One Time',
-                                                            'Monthly'=>'Monthly',
-                                                            'Quarterly'=>'Quarterly',
-                                                            'Semi-Annually'=>'Semi-Annually',
-                                                            'Annually'=>'Annually',
-                                                            'Biennially'=>'Biennially',
-                                                            'Triennially'=>'Triennially',
-                                                            ] as $val => $label)
-                                                            <option value="{{ $val }}"
-                                                                @selected(($latestProduct['billingcycle'] )==$val)>
-                                                                {{ $label }}
-                                                            </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-
-                                                    {{-- Payment Method --}}
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Payment Method</label>
-                                                        <select name="paymentmethod" class="form-control select-inline">
-                                                            @foreach($paymethodMethods as $m)
-                                                            <option value="{{ $m['module'] ?? $m['displayname'] }}"
-                                                                @selected(($service['paymentmethod'] ?? ''
-                                                                )==($m['module'] ?? $m['displayname']))>
-                                                                {{ $m['displayname'] ?? $m['module'] }}
-                                                            </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-
-                                                    {{-- Status --}}
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Status</label>
-                                                        <select name="status" class="form-control select-inline"
-                                                            id="prodstatus">
-                                                            <option value="Pending"
-                                                                @selected($latestProduct['status']=='Pending' )>Pending
-                                                            </option>
-                                                            <option value="Active"
-                                                                @selected($latestProduct['status']=='Active' )>Active
-                                                            </option>
-                                                            <option value="Completed"
-                                                                @selected($latestProduct['status']=='Completed' )>
-                                                                Completed</option>
-                                                            <option value="Suspended"
-                                                                @selected($latestProduct['status']=='Suspended' )>
-                                                                Suspended</option>
-                                                            <option value="Terminated"
-                                                                @selected($latestProduct['status']=='Terminated' )>
-                                                                Terminated</option>
-                                                            <option value="Cancelled"
-                                                                @selected($latestProduct['status']=='Cancelled' )>
-                                                                Cancelled</option>
-                                                            <option value="Fraud">Fraud</option>
-                                                        </select>
-                                                    </div>
-
-                                                    {{-- Dedicated IP --}}
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Dedicated IP</label>
-                                                        <input type="text" name="dedicatedip"
-                                                            value="{{ $latestProduct['dedicatedip'] ?? '' }}"
-                                                            class="form-control">
-                                                    </div>
-
-                                                    {{-- Notes --}}
-                                                    <div class="col-12">
-                                                        <label class="form-label">Admin Notes</label>
-                                                        <textarea name="notes" rows="4"
-                                                            class="form-control">{{ $latestProduct['notes'] ?? '' }}</textarea>
-                                                    </div>
-
+                                    <!-- row 10 -->
+                                    <tr>
+                                        <td class="fieldlabel" width="20%">Addons</td>
+                                        <td class="fieldarea" colspan="3">
+                                            <div class="addons-service-table">
+                                                <div class="tablebg">
+                                                    <table id="sortabletbl1" class="datatable" width="100%" border="0"
+                                                        cellspacing="1" cellpadding="3">
+                                                        <tr>
+                                                            <th>Reg Date</th>
+                                                            <th>Name</th>
+                                                            <th>Pricing</th>
+                                                            <th>Status</th>
+                                                            <th>Next Due Date</th>
+                                                            <th width="20"></th>
+                                                            <th width="20"></th>
+                                                        </tr>
+                                                        <tr>
+                                                            <td colspan="7">No Records Found</td>
+                                                        </tr>
+                                                    </table>
                                                 </div>
                                             </div>
+                                        </td>
+                                    </tr>
 
-                                            <div class="card-footer bg-white d-flex justify-content-end gap-2">
-                                                <button class="btn btn-primary" type="submit">
-                                                    Save Changes
-                                                </button>
-                                                <button class="btn btn-outline-secondary" type="reset">
-                                                    Cancel Changes
-                                                </button>
+                                    <!-- row 11 -->
+                                    <tr>
+                                        <td class="fieldlabel" width="20%">Subscription ID</td>
+                                        <td class="fieldarea" colspan="3">
+                                            <div id="subscription">
+                                                <div class="form-inline">
+                                                    <div class="form-group">
+                                                        <input type="text" name="subscriptionid"
+                                                            value="{{ $latestProduct['subscriptionid'] ?? '' }}"
+                                                            size="25" class="form-control" id="inputSubscriptionid" />
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </form>
+                                            <div id="subscriptionworking" style="display:none;text-align:center;">
+                                                <img src="images/loader.gif" />&nbsp; Working...
+                                            </div>
+                                        </td>
+                                    </tr>
 
+                                    <!-- row 12 -->
+                                    <tr>
+                                        <td class="fieldlabel" width="20%">Override Auto-Suspend</td>
+                                        <td class="fieldarea" colspan="3">
+                                            <div class="form-group date-picker-prepend-icon">
+                                                <label class="checkbox-inline">
+                                                    <input type="checkbox" name="overideautosuspend" value="1"
+                                                        @checked((int)($latestProduct['overideautosuspend'] ??
+                                                        0)===1) />
+                                                    Do not suspend until
+                                                </label>
+                                                &nbsp;
+                                                <label for="inputOverideSuspendUntil" class="field-icon">
+                                                    <i class="fal fa-calendar-alt"></i>
+                                                </label>
+                                                <input type="text" name="overidesuspenduntil"
+                                                    value="{{ $latestProduct['overidesuspenduntil'] ?? '0000-00-00' }}"
+                                                    class="form-control input-inline date-picker-single future"
+                                                    id="inputOverideSuspendUntil" />
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <!-- row 13 -->
+                                    <tr>
+                                        <td class="fieldlabel" width="20%">Auto-Terminate End of Cycle</td>
+                                        <td class="fieldarea" colspan="3">
+                                            <label class="checkbox-inline">
+                                                <input type="checkbox" name="autoterminateendcycle" value="1"
+                                                    @checked((int)($latestProduct['autoterminateendcycle'] ?? 0)===1) />
+                                                Reason
+                                            </label>
+                                            <input type="text" name="autoterminatereason"
+                                                value="{{ $latestProduct['autoterminatereason'] ?? '' }}" size="60"
+                                                class="form-control input-inline input-400"
+                                                id="inputAutoterminatereason" />
+                                        </td>
+                                    </tr>
+
+                                    <!-- row 14 -->
+                                    <tr>
+                                        <td class="fieldlabel" width="20%">Admin Notes</td>
+                                        <td class="fieldarea" colspan="3">
+                                            <textarea name="notes" rows="4" style="width:100%"
+                                                class="form-control">{{ $latestProduct['notes'] ?? '' }}</textarea>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <!-- buttons -->
+                                <div class="btn-container">
+                                    <input type="submit" value="Save Changes" class="btn btn-primary" />
+                                    <input type="reset" value="Cancel Changes" class="btn btn-default" />
                                 </div>
-                            </div>
-
-                            {{-- WHOIS Form --}}
-                            <form method="post" action="whois.php" target="_blank" id="frmWhois" class="d-none">
-                                @csrf
-                                <input type="hidden" name="domain" value="{{ $service['domain'] ?? 'abcgmail.com' }}">
                             </form>
-                        </div>
 
+                            <!-- hidden whois form -->
+
+                        </div>
                     </div>
 
-                    @endif
-                    <!-- User Profile Content -->
+                    <!-- MODALS (unchanged) -->
+                    <div class="modal fade" id="modalModuleCreate" tabindex="-1" role="dialog"
+                        aria-labelledby="ModuleCreateLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content panel panel-primary">
+                                <div class="modal-header panel-heading">
+                                    <button type="button" class="close"
+                                        data-dismiss="modal"><span>&times;</span></button>
+                                    <h4 class="modal-title">Confirm Module Command</h4>
+                                </div>
+                                <div class="modal-body">Are you sure you want to run the create function?</div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary"
+                                        onclick='runModuleCommand("create")'>Yes</button>
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                    <!--/ User Profile Content -->
+                    <div class="modal fade" id="modalModuleSuspend" tabindex="-1" role="dialog"
+                        aria-labelledby="ModuleSuspendLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content panel panel-primary">
+                                <div class="modal-header panel-heading">
+                                    <button type="button" class="close"
+                                        data-dismiss="modal"><span>&times;</span></button>
+                                    <h4 class="modal-title">Confirm Module Command</h4>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to run the suspend function?<br />
+                                    <div class="margin-top-bottom-20 text-center">
+                                        Suspension Reason:
+                                        <input type="text" id="suspreason" class="form-control input-inline input-300"
+                                            value="{{ $latestProduct['suspensionreason'] ?? '' }}" />
+                                        <br /><br />
+                                        <label class="checkbox-inline">
+                                            <input type="checkbox" id="suspemail" /> Send Suspension Email
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary"
+                                        onclick='runModuleCommand("suspend")'>Yes</button>
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="modalModuleUnsuspend" tabindex="-1" role="dialog"
+                        aria-labelledby="ModuleUnsuspendLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content panel panel-primary">
+                                <div class="modal-header panel-heading">
+                                    <button type="button" class="close"
+                                        data-dismiss="modal"><span>&times;</span></button>
+                                    <h4 class="modal-title">Confirm Module Command</h4>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to run the unsuspend function?<br />
+                                    <div class="margin-top-bottom-20 text-center">
+                                        <label class="checkbox-inline">
+                                            <input type="checkbox" id="unsuspended_email" /> Send Unsuspension Email
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary"
+                                        onclick='runModuleCommand("unsuspend")'>Yes</button>
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="modalModuleTerminate" tabindex="-1" role="dialog"
+                        aria-labelledby="ModuleTerminateLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content panel panel-primary">
+                                <div class="modal-header panel-heading">
+                                    <button type="button" class="close"
+                                        data-dismiss="modal"><span>&times;</span></button>
+                                    <h4 class="modal-title">Confirm Module Command</h4>
+                                </div>
+                                <div class="modal-body">Are you sure you want to run the terminate function?</div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary"
+                                        onclick='runModuleCommand("terminate")'>Yes</button>
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="modalModuleChangePackage" tabindex="-1" role="dialog"
+                        aria-labelledby="ModuleChangePackageLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content panel panel-primary">
+                                <div class="modal-header panel-heading">
+                                    <button type="button" class="close"
+                                        data-dismiss="modal"><span>&times;</span></button>
+                                    <h4 class="modal-title">Confirm Module Command</h4>
+                                </div>
+                                <div class="modal-body">Are you sure you want to run the change package function?</div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary"
+                                        onclick='runModuleCommand("changepackage")'>Yes</button>
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="modalDelete" tabindex="-1" role="dialog" aria-labelledby="DeleteLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content panel panel-primary">
+                                <div class="modal-header panel-heading">
+                                    <button type="button" class="close"
+                                        data-dismiss="modal"><span>&times;</span></button>
+                                    <h4 class="modal-title">Delete Product/Service</h4>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to delete this service? This will also remove any associated
+                                    addons
+                                    but not run the module terminate function.
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary">Yes</button>
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-                <!-- / Content -->
-
-                <!-- Footer -->
-                <footer class="content-footer footer bg-footer-theme">
-                    <div class="container-xxl">
-                        <div
-                            class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
-                            <div class="text-body">
-                                &#169;
-                                <script>
-                                    document.write(new Date().getFullYear());
-
-                                </script>
-                                , made with ❤️ by <a href="https://pixinvent.com" target="_blank"
-                                    class="footer-link">Pixinvent</a>
-                            </div>
-                            <div class="d-none d-lg-inline-block">
-                                <a href="https://themeforest.net/licenses/standard" class="footer-link me-4"
-                                    target="_blank">License</a>
-                                <a href="https://themeforest.net/user/pixinvent/portfolio" target="_blank"
-                                    class="footer-link me-4">More Themes</a>
-
-                                <a href="https://demos.pixinvent.com/vuexy-html-admin-template/documentation/"
-                                    target="_blank" class="footer-link me-4">Documentation</a>
-
-                                <a href="https://pixinvent.ticksy.com/" target="_blank"
-                                    class="footer-link d-none d-sm-inline-block">Support</a>
-                            </div>
-                        </div>
-                    </div>
-                </footer>
-                <!-- / Footer -->
-
-                <div class="content-backdrop fade"></div>
             </div>
 
             <!-- Content wrapper -->
@@ -916,12 +1120,32 @@
         <!-- / Layout page -->
     </div>
 
-    <!-- Overlay -->
-    <div class="layout-overlay layout-menu-toggle"></div>
+</div>
 
-    <!-- Drag Target Area To SlideIn Menu On Small Screens -->
-    <div class="drag-target"></div>
+<!-- Overlay -->
+<div class="layout-overlay layout-menu-toggle"></div>
+
+<!-- Drag Target Area To SlideIn Menu On Small Screens -->
+<div class="drag-target"></div>
 </div>
 
 
 @endsection
+
+@push('scripts')
+<script>
+    function submitServiceChange() {
+        console.log('service change');
+    }
+
+    function runModuleCommand(cmd) {
+        alert('Module command: ' + cmd);
+        $('#modalModuleCreate').modal('hide');
+    }
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+
+</script>
+
+@endpush

@@ -693,15 +693,9 @@
                                                                     <td class="text-end">
 
 
-                                                                        <form method="POST" action="{{ route('admin.users.product.show') }}">
+                                                                        <form method="POST" action="{{ route('admin.users.product.show', ['clientid'=>$item['clientid'], 'productid'=>$item['id']]) }}">
                                                                             @csrf
-
-                                                                            <input type="hidden" name="serviceid" value="{{ $item['id'] }}">
-                                                                            <input type="hidden" name="clientid" value="{{ $item['clientid'] }}">
-
-                                                                            <button type="submit" class="btn btn-success">
-                                                                                Manage
-                                                                            </button>
+                                                                            <button type="submit" class="btn btn-success">Manage</button>
                                                                         </form>
                                                                     </td>
                                                                 </tr>
@@ -726,7 +720,7 @@
                             {{-- MAIN LAYOUT: Left Form + Right Sidebar --}}
 
 
-                            
+
                         </div>
 
                     </div>

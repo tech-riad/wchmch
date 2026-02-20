@@ -1,3 +1,7 @@
+{{-- @php
+    dd($resp);
+@endphp --}}
+
 <div class="row">
     <div class="col-md-12">
         <div class="nav-align-top">
