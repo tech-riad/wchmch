@@ -1,4 +1,257 @@
 @extends('backend.layouts.app')
+@push('styles')
+<style>
+    /* ===== CRITICAL FIX: Prevent content from going behind menu ===== */
+    .layout-page {
+      margin-left: 0 !important;
+      padding-left: 0 !important;
+      width: 100% !important;
+      position: relative !important;
+    }
+
+    .content-wrapper {
+      width: 100% !important;
+      overflow-x: hidden !important;
+    }
+
+    .container-p-y {
+      width: 100% !important;
+      max-width: 100% !important;
+      padding-left: 1.5rem !important;
+      padding-right: 1.5rem !important;
+      box-sizing: border-box !important;
+    }
+
+    /* Fix for all screen sizes */
+    @media (min-width: 1200px) {
+      .layout-menu-fixed .layout-page {
+        padding-left: 16.25rem !important; /* match menu width */
+      }
+    }
+
+    @media (max-width: 1199.98px) {
+      .layout-menu-fixed .layout-page {
+        padding-left: 0 !important;
+      }
+
+      /* Ensure menu doesn't push content */
+      .layout-menu {
+        z-index: 1080 !important;
+      }
+    }
+
+    /* ===== WHMCS FIELD STYLES ===== */
+    .fieldlabel {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      padding: 0.75rem 1rem;
+      vertical-align: middle;
+      width: 20%;
+      border: 1px solid #e9ecef;
+    }
+    .fieldarea {
+      background-color: #ffffff;
+      padding: 0.5rem 1rem;
+      vertical-align: middle;
+      border: 1px solid #e9ecef;
+    }
+    .service-field-inline {
+      display: inline-block;
+      margin-right: 8px;
+    }
+    .font-mouse {
+      font-size: 0.85rem;
+      color: #6c757d;
+    }
+    .input-100, .input-200, .input-300, .input-400 {
+      max-width: 100%;
+    }
+    .input-200 { width: 200px; }
+    .input-300 { width: 280px; }
+    .input-400 { width: 380px; }
+
+    /* date picker icon */
+    .date-picker-prepend-icon { position: relative; }
+    .field-icon { position: absolute; left: 8px; top: 8px; z-index: 3; color: #a1a5b7; }
+    #inputRegdate, #inputNextduedate, #inputTermination_date, #inputOverideSuspendUntil { padding-left: 30px; }
+
+    .addons-service-table { overflow-x: auto; }
+    .tablebg .datatable { background: white; }
+
+    /* ===== FULLY RESPONSIVE FIXES FOR ALL DEVICES ===== */
+    /* Extra small devices (phones, < 576px) */
+    @media screen and (max-width: 575.98px) {
+      .container-p-y {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+      }
+
+      .card-body {
+        padding: 1rem !important;
+      }
+
+      /* make table elements block level */
+      .form, .form tbody, .form tr, .form td {
+        display: block;
+        width: 100% !important;
+        box-sizing: border-box;
+      }
+      .form td {
+        padding: 0.5rem 0.5rem;
+        border: none;
+        border-bottom: 1px solid #e9ecef;
+      }
+      .form td.fieldlabel {
+        background-color: #f1f3f5;
+        font-weight: 700;
+        border-bottom: 1px solid #dee2e6;
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+      }
+      .form td.fieldarea {
+        background-color: #ffffff;
+        border-bottom: 2px solid #e9ecef;
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+      }
+      .form tr {
+        margin-bottom: 0.5rem;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      /* input fields full width */
+      .form-control, .input-group, .input-200, .input-300, .input-400 {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      .input-group {
+        display: flex;
+        flex-wrap: wrap;
+      }
+      .input-group .form-control {
+        width: calc(100% - 45px) !important;
+        flex: 1 1 auto;
+      }
+      .input-group-btn {
+        width: auto;
+        flex: 0 0 auto;
+      }
+      /* inline elements stack */
+      .service-field-inline {
+        display: block;
+        margin-right: 0;
+        margin-bottom: 8px;
+      }
+      .btn-container {
+        text-align: center;
+      }
+      /* module buttons stack */
+      #modcmdbtns .btn {
+        display: inline-block;
+        width: calc(50% - 6px);
+        margin-right: 0;
+        margin-bottom: 6px;
+        white-space: normal;
+        font-size: 0.85rem;
+        padding: 0.375rem 0.5rem;
+      }
+      #modcmdbtns .btn:nth-child(odd) {
+        margin-right: 4px;
+      }
+      /* domain group fix */
+      .dropdown-menu {
+        position: absolute !important;
+        transform: translate3d(0, 35px, 0) !important;
+        min-width: 120px !important;
+      }
+      h4 {
+        font-size: 1.25rem;
+      }
+    }
+
+    /* Small devices (landscape phones, 576px - 767px) */
+    @media screen and (min-width: 576px) and (max-width: 767.98px) {
+      .container-p-y {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+      }
+
+      .form, .form tbody, .form tr, .form td {
+        display: block;
+        width: 100% !important;
+      }
+      .form td.fieldlabel {
+        background-color: #f1f3f5;
+      }
+      .input-200, .input-300, .input-400 {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      #modcmdbtns .btn {
+        margin-bottom: 5px;
+        width: auto;
+        min-width: 120px;
+      }
+    }
+
+    /* Medium devices (tablets, 768px - 991px) */
+    @media screen and (min-width: 768px) and (max-width: 991.98px) {
+      .input-300, .input-400 {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      .fieldlabel, .fieldarea {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+      }
+      .form-control {
+        font-size: 0.9rem;
+      }
+    }
+
+    /* Large devices (desktops, 992px - 1199px) */
+    @media screen and (min-width: 992px) and (max-width: 1199.98px) {
+      .fieldlabel {
+        width: 25% !important;
+      }
+      .fieldarea {
+        width: 25% !important;
+      }
+    }
+
+    /* module command buttons base */
+    #modcmdbtns .btn {
+      margin-right: 4px;
+      margin-bottom: 4px;
+    }
+
+    /* modal header same as original */
+    .modal-header { background-color: #f8f9fa; }
+    .panel-primary { border-color: #e9ecef; }
+
+    /* fix for very large screens */
+    @media (min-width: 1400px) {
+      .container-xxl {
+        max-width: 1320px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    }
+
+    /* ensure no overflow */
+    .card {
+      overflow-x: auto;
+      overflow-y: visible;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+  </style>
+
+@endpush
 
 @section('content')
 
@@ -549,6 +802,12 @@
                     <div class="card mb-4">
                         <div class="card-header">
                             <h4>Manage Product/Service</h4>
+                            <div>
+                                <a href="{{ route('admin.users.products',['clientId'=>$latestProduct['clientid']]) }}" class="btn btn-outline-secondary me-2">
+                                    <i class="ti ti-arrow-left me-1"></i> Back to List
+                                </a>
+
+                            </div>
                         </div>
                         <div class="card-body">
                             <!-- main form -->
@@ -687,7 +946,7 @@
                                                             target="_blank">www</a>
                                                     </li>
                                                     <li>
-                                                        <a class="dropdown-item" href="https://who.is/"
+                                                        <a class="dropdown-item" href="https://who.is/" target="_blank"
                                                            >whois</a>
                                                     </li>
                                                     <li>
@@ -930,7 +1189,7 @@
                                                 <label for="inputOverideSuspendUntil" class="field-icon">
                                                     <i class="fal fa-calendar-alt"></i>
                                                 </label>
-                                                <input type="text" name="overidesuspenduntil"
+                                                <input type="date" name="overidesuspenduntil"
                                                     value="{{ $latestProduct['overidesuspenduntil'] ?? '0000-00-00' }}"
                                                     class="form-control input-inline date-picker-single future"
                                                     id="inputOverideSuspendUntil" />

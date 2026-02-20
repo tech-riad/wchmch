@@ -987,6 +987,7 @@ class ClientController extends Controller
             $grouped[$groupName][] = $p;
         }
 
+        // dd($latestProduct);
         return view('backend.client.product.show', [
             'products'         => $products,
             'client'           => $client,
@@ -1004,14 +1005,16 @@ class ClientController extends Controller
 
     public function UpdateClientProduct(Request $request, WhmcsService $whmcs)
     {
+        // dd($request->all());
         $clientId  = (int) $request->input('clientid');
         $serviceId = (string) $request->input('serviceid');
 
         $request->validate([
-            'billingcycle' => 'required|string',
+            'billingcycle' => 'required',
             'status'       => 'required|string',
-            'nextduedate'  => 'required|date',
+            'nextduedate'  => 'required|string',
         ]);
+        // dd($request->all());
 
         // pid[] fix
         $pid = $request->input('pid');
@@ -1038,6 +1041,7 @@ class ClientController extends Controller
             'dedicatedip'        => $request->input('dedicatedip'),
             'notes'              => $request->input('notes'),
         ];
+        // dd($payload);
 
         if ($request->filled('priceoverride')) {
             $payload['priceoverride'] = is_numeric($request->input('priceoverride'))
@@ -1048,11 +1052,13 @@ class ClientController extends Controller
         $resp = $whmcs->call('UpdateClientProduct', $payload);
 
         if (($resp['result'] ?? '') !== 'success') {
+
             return back()
                 ->withInput()
                 ->with('error', $resp['message'] ?? 'Product update failed')
                 ->with('whmcs', $resp);
         }
+        // dd('here');
 
         return back()
                     ->with('success', 'Product updated successfully')
