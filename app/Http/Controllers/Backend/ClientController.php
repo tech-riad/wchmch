@@ -1067,6 +1067,23 @@ class ClientController extends Controller
 
 
 
+    public function invoices(Request $request, WhmcsService $whmcs ,$clientid)
+    {
+
+        $clientResp = $whmcs->call('GetClientsDetails', [
+            'clientid' => $clientid,
+        ]);
+        $client = $clientResp['client'] ?? [];
+
+
+        return view('backend.client.invoices.index', [
+            'client'           => $client,
+            'clientid'         => $clientid,
+        ]);
+    }
+
+
+
 
 
 

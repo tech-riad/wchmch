@@ -24,6 +24,10 @@
                     <a class="nav-link {{ request()->routeIs('admin.users.products') ? 'active' : '' }}" href="{{ route('admin.users.products', ['clientId' => $client['id']]) }}"><i
                             class="icon-base ti tabler-link icon-sm me-1_5"></i>Products</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.users.invoices') ? 'active' : '' }}" href="{{ route('admin.users.invoices', ['clientid' => $client['id']]) }}"><i
+                            class="icon-base ti tabler-link icon-sm me-1_5"></i>Invoices</a>
+                </li>
             </ul>
         </div>
     </div>
