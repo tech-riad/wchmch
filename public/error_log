@@ -256,3 +256,5 @@ Stack trace:
 #35 [internal function]: Illuminate\Foundation\Bootstrap\HandleExceptions->Illuminate\Foundation\Bootstrap\{closure}(Object(InvalidArgumentException))
 #36 {main}
   thrown in /home/shuvotuition/uni/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php on line 221
+[02-Mar-2026 20:18:06 UTC] PHP Fatal error:  Trait "App\Http\Controllers\Backend\Illuminate\Http\Request" not found in /home/shuvotuition/uni/app/Http/Controllers/Backend/ClientController.php on line 10
+[02-Mar-2026 20:26:20 UTC] PHP Fatal error:  Trait "App\Http\Controllers\Backend\Illuminate\Http\Request" not found in /home/shuvotuition/uni/app/Http/Controllers/Backend/ClientController.php on line 11

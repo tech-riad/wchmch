@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\WhmcsService;
 use Illuminate\Http\Request; // use Symfony\Component\HttpFoundation\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class ClientController extends Controller
 {
@@ -1076,10 +1077,213 @@ class ClientController extends Controller
         $client = $clientResp['client'] ?? [];
 
 
+        $invoicesResp = $whmcs->call('GetInvoices', [
+            'userid'  => $clientid,
+            'orderby' => 'id',
+            'order'   => 'desc',
+        ]);
+
+        $invoices = $invoicesResp['invoices']['invoice'];
+
+
+        // dd($invoices);
+
+
         return view('backend.client.invoices.index', [
             'client'           => $client,
             'clientid'         => $clientid,
+            'invoices'         => $invoices,
         ]);
+    }
+
+
+
+
+
+    public function invoiceAction(Request $request, WhmcsService $whmcs)
+    {
+        // dd($request->all());
+
+        $request->validate([
+            'invoice_id' => 'required|integer',
+            'action'     => 'required|string',
+        ]);
+
+        $invoiceId = (int) $request->invoice_id;
+        $action    = (string) $request->action;
+
+        $invoice = $whmcs->call('GetInvoice', ['invoiceid' => $invoiceId]);
+
+
+        $userId  = (int) ($invoice['userid'] ?? 0);
+        $gateway = $invoice['paymentmethod'] ?? 'mailin';
+        $status  = strtolower((string)($invoice['status'] ?? ''));
+        $balance = (float) ($invoice['balance'] ?? $invoice['total'] ?? 0);
+
+        switch ($action) {
+
+            case 'mark_paid': {
+
+
+                if ($invoice['status'] === 'paid' ) {
+                            return response()->json(['message' => 'Invoice already paid.']);
+                        }
+
+
+                $resp = $whmcs->call('UpdateInvoice', [
+                    'invoiceid' => $invoice['invoiceid'],
+                    'status' => 'Paid',
+                ]);
+                $amount  = (float) ($invoice['balance'] ?? $invoice['total'] ?? 0);
+                $gateway = $invoice['paymentmethod'] ?? 'mailin';
+
+                $resp = $whmcs->call('AddInvoicePayment', [
+                    'invoiceid' => $invoiceId,
+                    'transid'   => 'MANUAL-' . strtoupper(\Illuminate\Support\Str::random(10)),
+                    'gateway'   => $gateway,
+                    'date'      => now()->format('Y-m-d'),
+                    'amount'    => number_format($amount, 2, '.', ''),
+                ]);
+                return response()->json(['message' => 'Invoice marked as Paid.']);
+
+            }
+
+            case 'mark_unpaid': {
+                $resp = $whmcs->call('UpdateInvoice', [
+                    'invoiceid' => $invoiceId,
+                    'status'    => 'Unpaid',
+                ]);
+                return response()->json(['message' => 'Invoice marked as Unpaid.']);
+            }
+
+            case 'mark_cancelled': {
+                $resp = $whmcs->call('UpdateInvoice', [
+                    'invoiceid' => $invoiceId,
+                    'status'    => 'Cancelled',
+                ]);
+                return response()->json(['message' => 'Invoice marked as Cancelled.']);
+            }
+
+            case 'duplicate_invoice': {
+                if ($userId <= 0) {
+                    return response()->json(['message' => 'Invalid client id on invoice.'], 422);
+                }
+
+                 $items = $invoice['items']['item'] ?? [];
+                if (!empty($items) && isset($items['description'])) {
+                    $items = [$items];
+                }
+
+                if (empty($items)) {
+                    return response()->json(['message' => 'No invoice items found to duplicate.'], 422);
+                }
+
+                $origDate    = $invoice['date'] ?? now()->format('Y-m-d');
+                $origDueDate = $invoice['duedate'] ?? now()->format('Y-m-d');
+
+                $payload = [
+                    'userid'        => $userId,
+                    'paymentmethod' => $gateway,
+                    'status'        => 'Unpaid',
+                    'date'          => $origDate,
+                    'duedate'       => $origDueDate,
+                    'sendinvoice'   => false,
+                    'notes'         => trim(($invoice['notes'] ?? '') . "\nDuplicated from invoice #{$invoiceId}"),
+                ];
+
+                $i = 1;
+                foreach ($items as $it) {
+                    // dd($it);
+                    $desc = (string) ($it['description'] ?? '');
+                    if (trim($desc) === '') continue;
+
+                    $amt = (string) ($it['amount'] ?? '0.00');
+
+                    $taxed = $it['taxed'] ?? 0;
+                    $taxed = in_array((string)$taxed, ['1','true','yes'], true) ? 1 : 0;
+
+                    $payload["itemdescription{$i}"] = $desc;
+                    $payload["itemamount{$i}"]      = $amt;
+                    $payload["itemtaxed{$i}"]       = $taxed;
+
+                    $i++;
+                }
+                // dd($payload);
+
+                $create = $whmcs->call('CreateInvoice', $payload);
+
+                if (($create['result'] ?? '') !== 'success') {
+                    return response()->json([
+                        'message' => $create['message'] ?? 'Failed to duplicate invoice.',
+                        'debug'   => $create,
+                    ], 422);
+                }
+
+                return response()->json([
+                    'message'      => 'Invoice duplicated successfully.',
+                    'newInvoiceId' => $create['invoiceid'] ?? null,
+                ]);
+
+
+
+            }
+
+            // case 'send_reminder': {
+            //     // SendEmail for invoice type: customtype=invoice, id=invoiceid :contentReference[oaicite:13]{index=13}
+            //     // Template name MUST exist in WHMCS Email Templates.
+            //     $resp = $whmcs->call('SendEmail', [
+            //         'customtype'  => 'invoice',
+            //         'id'          => $invoiceId,
+            //         'messagename' => 'Invoice Payment Reminder', // change if your template name differs
+            //     ]);
+
+            //     if (($resp['result'] ?? '') !== 'success') {
+            //         return response()->json([
+            //             'message' => $resp['message'] ?? 'Failed to send reminder.',
+            //             'debug'   => $resp,
+            //         ], 422);
+            //     }
+
+            //     return response()->json(['message' => 'Reminder email sent successfully.']);
+            // }
+
+            // case 'merge': {
+            //     // No official public API command for merging invoices; it’s an admin feature. :contentReference[oaicite:14]{index=14}
+            //     return response()->json([
+            //         'message' => 'Merge is not available via standard WHMCS API. Need custom module/localAPI implementation.',
+            //     ], 422);
+            // }
+
+            // case 'mass_pay': {
+            //     // Mass Pay is an admin feature; no standard API command exposed. :contentReference[oaicite:15]{index=15}
+            //     return response()->json([
+            //         'message' => 'Mass Pay is not available via standard WHMCS API. Need custom module/localAPI implementation.',
+            //     ], 422);
+            // }
+
+            // case 'delete': {
+            //     // WHMCS API can't delete entire invoice (standard API). :contentReference[oaicite:16]{index=16}
+            //     // So we cancel instead (safe alternative).
+            //     $resp = $whmcs->call('UpdateInvoice', [
+            //         'invoiceid' => $invoiceId,
+            //         'status'    => 'Cancelled',
+            //     ]); // :contentReference[oaicite:17]{index=17}
+
+            //     if (($resp['result'] ?? '') !== 'success') {
+            //         return response()->json([
+            //             'message' => $resp['message'] ?? 'Failed to cancel invoice.',
+            //             'debug'   => $resp,
+            //         ], 422);
+            //     }
+
+            //     return response()->json([
+            //         'message' => 'Invoice cancelled (API does not support deleting invoices).',
+            //     ]);
+            // }
+
+            default:
+                return response()->json(['message' => 'Unsupported action: ' . $action], 422);
+        }
     }
 
 
