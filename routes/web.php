@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Backend\ClientController;
+use App\Http\Controllers\Backend\InvoiceDetailsController;
 use App\Http\Controllers\WHMCSController;
 use Illuminate\Support\Facades\Route;
 
@@ -43,6 +44,9 @@ Route::middleware(['web', 'auth','whmcsAdmin'])->group(function () {
     Route::post('/users/products/update/clientid={clientid}productid={productid}', [ClientController::class, 'UpdateClientProduct'])->name('admin.users.product.update');
     Route::get('/users/invoices/clientid={clientid}', [ClientController::class, 'invoices'])->name('admin.users.invoices');
     Route::post('/users/invoice/action', [ClientController::class, 'invoiceAction'])->name('admin.users.invoice.action');
+
+    // Invoice Details Controller
+    Route::get('/users/invoice/details/{invoiceid}', [InvoiceDetailsController::class, 'invoiceDetails'])->name('admin.users.invoice.details');
 
     Route::prefix('admin')->group(function () {
     Route::get('/orders/create/{clientId}', [ClientController::class, 'createOrder'])->name('admin.orders.create');

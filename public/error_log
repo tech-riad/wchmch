@@ -258,3 +258,4 @@ Stack trace:
   thrown in /home/shuvotuition/uni/vendor/laravel/framework/src/Illuminate/Database/DatabaseManager.php on line 221
 [02-Mar-2026 20:18:06 UTC] PHP Fatal error:  Trait "App\Http\Controllers\Backend\Illuminate\Http\Request" not found in /home/shuvotuition/uni/app/Http/Controllers/Backend/ClientController.php on line 10
 [02-Mar-2026 20:26:20 UTC] PHP Fatal error:  Trait "App\Http\Controllers\Backend\Illuminate\Http\Request" not found in /home/shuvotuition/uni/app/Http/Controllers/Backend/ClientController.php on line 11
+[03-Mar-2026 20:17:43 UTC] PHP Fatal error:  Cannot declare class App\Http\Controllers\InvoiceDetailsController, because the name is already in use in /home/shuvotuition/uni/app/Http/Controllers/Backend/InvoiceDetailsController.php on line 8

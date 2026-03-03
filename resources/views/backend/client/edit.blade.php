@@ -459,8 +459,6 @@
                                 @foreach($labels as $field => $label)
 
                                 @php
-                                // UI তে checked হবে:
-                                // inverse field হলে !value
                                 $raw = ($field === 'allowSingleSignOn')
                                 ? (int) old($field, $defaults[$field])
                                 : oldBool($field, $defaults[$field]);

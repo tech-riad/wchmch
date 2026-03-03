@@ -618,8 +618,8 @@
                                         <tbody>
                                             @foreach ($invoices as $item)
                                             <tr>
-                                                <td>
-                                                    INV-{{ $item['id'] }}
+                                                <td> <a href="{{route('admin.users.invoice.details',$item['id'] )}}">INV-{{ $item['id'] }}</a>
+
                                                 </td>
 
                                                 <td>
