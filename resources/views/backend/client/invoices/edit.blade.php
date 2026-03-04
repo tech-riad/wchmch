@@ -56,18 +56,18 @@
             <div class="content-wrapper">
                 <div class="container-xxl flex-grow-1 container-p-y">
                     @if(session('success'))
-  <div class="alert alert-success alert-dismissible fade show" role="alert">
-    <i class="ti ti-circle-check me-2"></i>{{ session('success') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-  </div>
-@endif
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="ti ti-circle-check me-2"></i>{{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    @endif
 
-@if(session('error'))
-  <div class="alert alert-danger alert-dismissible fade show" role="alert">
-    <i class="ti ti-alert-triangle me-2"></i>{{ session('error') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-  </div>
-@endif
+                    @if(session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="ti ti-alert-triangle me-2"></i>{{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    @endif
 
                     <!-- INVOICE HEADER with Vuexy style elements -->
                     <div class="d-flex justify-content-between align-items-center mb-4">
