@@ -167,7 +167,7 @@
                                             </div>
 
 
-                                            @elseif($invoice['status'] == 'Unaid')
+                                            @elseif($invoice['status'] != 'Refunded')
                                             <form
                                                 action="{{route('admin.users.invoice.paymentadd',$invoice['invoiceid'])}}"
                                                 method="POST">
@@ -254,8 +254,125 @@
                                         </div>
                                         <!-- Tab 4: Refund -->
                                         <div class="tab-pane fade" id="refund" role="tabpanel">
-                                            <div class="alert alert-info mb-0">There are no transactions that are
-                                                eligible for a refund.</div>
+
+                                            @if ($invoice['status'] == 'Refunded')
+                                            <div class="alert alert-info mb-0"><div class="row g-3">
+
+                                                            <div class="alert alert-info d-flex align-items-start" role="alert">
+                                                            <div class="me-2">
+                                                                <i class="ti ti-info-circle fs-4"></i>
+                                                            </div>
+                                                            <div>
+                                                                <h6 class="alert-heading mb-1">This is a {{$invoice['status']}} Invoice.</h6>
+                                                                <p class="mb-0">
+                                                                The system can only refund payments from an invoice in Unpaid, Payment Pending, Paid, or Collections status.
+                                                                </p>
+                                                            </div>
+                                                            </div>
+                                                    </div>
+                                                </div>
+
+
+
+
+                                            @else
+
+                                                <div class="card">
+                                                <div class="card-header">
+                                                    <h6 class="mb-0">Refund</h6>
+                                                </div>
+
+                                                <div class="card-body">
+                                                    <div class="row g-3">
+
+                                                    <!-- Transactions -->
+                                                    <div class="col-12">
+                                                        <label class="form-label fw-semibold">Transactions</label>
+                                                        <select id="transid" name="transaction_id" class="form-select">
+                                                        <option value="11" data-amount="15.00">04/03/2026 | aa | 15.00</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <!-- Amount -->
+                                                    <div class="col-12">
+                                                        <label class="form-label fw-semibold">Amount</label>
+                                                        <div class="input-group">
+                                                        <span class="input-group-text">$</span>
+                                                        <input type="text" name="amount" id="amount" class="form-control" placeholder="0.00">
+                                                        </div>
+                                                        <small class="text-muted">Leave blank for full refund</small>
+                                                    </div>
+
+                                                    <!-- Refund Type -->
+                                                    <div class="col-12">
+                                                        <label class="form-label fw-semibold">Refund Type</label>
+                                                        <select name="refund_type" id="refundType" class="form-select" onchange="showRefundTransactionId();">
+                                                        <option value="sendtogateway">Refund through Gateway (If supported by module)</option>
+                                                        <option value="">Manual Refund Processed Externally</option>
+                                                        <option value="addascredit">Add to Client's Credit Balance</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <!-- Refund Transaction ID (conditional) -->
+                                                    <div class="col-12" id="refundTransactionId" style="display:none;">
+                                                        <label class="form-label fw-semibold">Transaction ID</label>
+                                                        <input type="text" name="refund_transaction_id" class="form-control" placeholder="Enter transaction id">
+                                                    </div>
+
+                                                    <!-- Reverse Payment -->
+                                                    <div class="col-12">
+                                                        <div class="form-check form-switch">
+                                                        <input type="hidden" name="reverse" value="0">
+                                                        <input class="form-check-input" type="checkbox" id="reverse" name="reverse" value="1">
+                                                        <label class="form-check-label" for="reverse">
+                                                            Reverse Payment
+                                                            <div class="text-muted small">
+                                                            Undo automated actions triggered by this transaction - where possible.
+                                                            </div>
+                                                        </label>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Send Email -->
+                                                    <div class="col-12">
+                                                        <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" id="sendemail" name="sendemail" value="1" checked>
+                                                        <label class="form-check-label" for="sendemail">
+                                                            Send Email
+                                                            <div class="text-muted small">Check to Send Confirmation Email</div>
+                                                        </label>
+                                                        </div>
+                                                    </div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <script>
+                                                function showRefundTransactionId() {
+                                                    const refundType = document.getElementById('refundType').value;
+                                                    const box = document.getElementById('refundTransactionId');
+
+                                                    // WHMCS-like: show Transaction ID field when NOT "sendtogateway"
+                                                    if (refundType === 'sendtogateway') {
+                                                    box.style.display = 'none';
+                                                    } else {
+                                                    box.style.display = 'block';
+                                                    }
+                                                }
+
+                                                // Optional: auto-fill amount from selected transaction
+                                                document.getElementById('transid')?.addEventListener('change', function () {
+                                                    const opt = this.options[this.selectedIndex];
+                                                    const amt = opt.getAttribute('data-amount');
+                                                    if (amt) document.getElementById('amount').value = amt;
+                                                });
+                                            </script>
+
+                                            @endif
+
+
+
                                         </div>
                                         <!-- Tab 5: Notes -->
                                         <div class="tab-pane fade" id="notes" role="tabpanel">
@@ -310,8 +427,93 @@
                             </div>
 
                             <!-- Ledger & Transaction History placed in one row (responsive) -->
+
                             <div class="row mt-6">
-                                <div class="col-md-6">
+                                <div class="col-md-12">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">Ledger </h6>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm small">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th style="white-space:nowrap;">Date</th>
+                                                        <th>Type</th>
+                                                        <th>Description</th>
+                                                        <th style="white-space:nowrap;">Payment Method</th>
+                                                        <th>Reference</th>
+                                                        <th class="text-end" style="white-space:nowrap;">Amount</th>
+                                                        <th class="text-end" style="white-space:nowrap;">Transaction Fees</th>
+                                                    </tr>
+                                                </thead>
+
+                                                <tbody>
+                                                    @php
+                                                        $tx = $invoice['transactions']['transaction'] ?? [];
+
+                                                    @endphp
+
+                                                    @forelse($tx as $t)
+                                                        <tr>
+                                                            <td style="white-space:nowrap;">
+                                                                {{ $t['date'] ?? '-' }}
+                                                            </td>
+
+                                                            <td>
+                                                                <span class="badge bg-label-info">
+                                                                    {{ $t['type'] ?? '—' }}
+                                                                </span>
+                                                            </td>
+
+                                                            <td class="text-muted">
+                                                                {{ $t['description'] ?? '—' }}
+                                                            </td>
+
+                                                            <td>
+                                                                {{ $t['gateway'] ?? ($t['paymentmethod'] ?? '—') }}
+                                                            </td>
+
+                                                            <td>
+                                                                @php
+                                                                    $ref = $t['transid'] ?? $t['reference'] ?? null;
+                                                                    $txId = $t['id'] ?? null;
+                                                                @endphp
+
+                                                                @if($ref)
+                                                                    <a href="#"
+                                                                    class="text-decoration-none">
+                                                                        {{ $ref }}
+                                                                        <i class="ti ti-info-circle ms-1"></i>
+                                                                    </a>
+                                                                @else
+                                                                    —
+                                                                @endif
+                                                            </td>
+
+                                                            <td class="text-end fw-semibold">
+                                                                ${{ number_format((float)($t['amountin'] ?? 0), 2) }} USD
+                                                            </td>
+
+                                                            <td class="text-end text-muted">
+                                                                ${{ number_format((float)($t['fees'] ?? $t['transactionfees'] ?? 0), 2) }} USD
+                                                            </td>
+                                                        </tr>
+                                                    @empty
+                                                        <tr>
+                                                            <td colspan="7" class="text-center text-muted py-4">
+                                                                <i class="ti ti-file-off me-1"></i> No Records Found
+                                                            </td>
+                                                        </tr>
+                                                    @endforelse
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-6">
+                                <div class="col-md-12">
                                     <div class="card">
                                         <div class="card-header">
                                             <h6 class="mb-0">Ledger</h6>
@@ -334,38 +536,9 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="card">
-                                        <div class="card-header">
-                                            <h6 class="mb-0">Transaction History</h6>
-                                        </div>
-                                        <div class="table-responsive">
-                                            <table class="table table-sm small">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Date</th>
-                                                        <th>Method</th>
-                                                        <th>Status</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @if ($invoice['transactions'] != '')
-                                                    <tr>
-                                                        <td colspan="3" class="text-center"> Records Found</td>
-                                                    </tr>
-                                                    @else
-                                                    <tr>
-                                                        <td colspan="3" class="text-center">No Records Found</td>
-                                                    </tr>
 
-                                                    @endif
-
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
+
                         </div>
                     </div>
                 </div>

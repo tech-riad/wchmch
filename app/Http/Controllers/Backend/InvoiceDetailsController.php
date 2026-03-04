@@ -16,7 +16,7 @@ class InvoiceDetailsController extends Controller
             'invoiceid' => $invoiceid,
         ]);
 
-        dd($invoice);
+        // dd($invoice);
         $client = $whmcs->call('GetClientsDetails', [
             'clientid' => $invoice['userid'],
             'stats' => true,
