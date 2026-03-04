@@ -132,7 +132,8 @@
                                                     <span
                                                         class="invoice-status unpaid mb-3">{{$invoice['status']}}</span>
                                                     <div class="mt-3">
-                                                        <select name="paymentmethod" class="form-select form-select-sm w-auto d-inline-block me-2">
+                                                        <select name="paymentmethod"
+                                                            class="form-select form-select-sm w-auto d-inline-block me-2">
                                                             @foreach($paymethodMethods as $m)
                                                             <option value="{{ $m['module'] ?? $m['displayname'] }}">
                                                                 {{ $m['displayname'] ?? $m['module'] }}
@@ -146,33 +147,67 @@
                                         </div>
                                         <!-- Tab 2: Add Payment -->
                                         <div class="tab-pane fade" id="addpayment" role="tabpanel">
-                                            <form>
+                                            <form
+                                                action="{{route('admin.users.invoice.paymentadd',$invoice['invoiceid'])}}"
+                                                method="POST">
+                                                @csrf
+                                                @if ($invoice['status'] != 'Paid')
+
+
                                                 <div class="row g-3">
-                                                    <div class="col-md-6"><label class="form-label">Date</label><input
-                                                            type="text" class="form-control" value="03/03/2026"></div>
+                                                    <div class="alert alert-info d-flex align-items-start" role="alert">
+                                                    <div class="me-2">
+                                                        <i class="ti ti-info-circle fs-4"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="alert-heading mb-1">This is a {{$invoice['status']}} Invoice.</h6>
+                                                        <p class="mb-0">
+                                                        The system can only apply payments to an invoice in
+                                                        <strong>Unpaid</strong> status.
+                                                        </p>
+                                                    </div>
+                                                    </div>
+                                                </div>
+                                                @else
+                                                <div class="row g-3">
+                                                    <div class="col-md-6"><label class="form-label">Date</label>
+                                                        <input type="date" class="form-control" name="date"
+                                                            value="{{ date('Y-m-d') }}">
+                                                    </div>
                                                     <div class="col-md-6"><label class="form-label">Amount</label><input
-                                                            type="text" class="form-control" value="1.00"></div>
+                                                            type="text" class="form-control" name="amount"
+                                                            value="{{ $invoice['subtotal'] ?? '—' }}"></div>
                                                     <div class="col-md-6"><label class="form-label">Payment
                                                             method</label>
-                                                            <select name="paymentmethod" class="form-control select-inline">
-                                                                @foreach($paymethodMethods as $m)
-                                                                <option value="{{ $m['module'] ?? $m['displayname'] }}">
-                                                                    {{ $m['displayname'] ?? $m['module'] }}
-                                                                </option>
-                                                                @endforeach
-                                                            </select>
-                                                        </div>
+                                                        <select name="paymentmethod" class="form-control select-inline">
+                                                            @foreach($paymethodMethods as $m)
+                                                            <option value="{{ $m['module'] ?? $m['displayname'] }}">
+                                                                {{ $m['displayname'] ?? $m['module'] }}
+                                                            </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
                                                     <div class="col-md-6"><label class="form-label">Transaction
-                                                            ID</label><input type="text" class="form-control"></div>
+                                                            ID</label><input type="text" name="transid"
+                                                            class="form-control"></div>
+                                                    <div class="col-md-6"><label class="form-label">Transaction
+                                                            Fees</label><input type="text" name="fees"
+                                                            class="form-control"></div>
                                                     <div class="col-md-12">
-                                                        <div class="form-check"><input class="form-check-input"
-                                                                type="checkbox" checked><label
-                                                                class="form-check-label">Send confirmation email</label>
+                                                        <div class="form-check">
+                                                            <label class="checkbox-inline">
+                                                                <input type="hidden" name="sendconfirmation" value="0">
+                                                                <input type="checkbox" name="sendconfirmation"
+                                                                    value="1">
+                                                                Check to Send Confirmation Email
+                                                            </label>
                                                         </div>
                                                     </div>
-                                                    <div class="col-12"><button class="btn btn-primary">Add
+                                                    <div class="col-12"><button type="submit"
+                                                            class="btn btn-primary">Add
                                                             Payment</button></div>
                                                 </div>
+                                                @endif
                                             </form>
                                         </div>
                                         <!-- Tab 3: Credit -->
@@ -202,8 +237,8 @@
                                         <!-- Tab 5: Notes -->
                                         <div class="tab-pane fade" id="notes" role="tabpanel">
                                             <div class="alert alert-info mb-0">
-                                                @if ($invoice['notes']  != '')
-                                                     {{$invoice['notes']}}
+                                                @if ($invoice['notes'] != '')
+                                                {{$invoice['notes']}}
                                                 @else
                                                 There are no notes on this invoice.
 
@@ -224,24 +259,27 @@
                                         <thead>
                                             <tr>
                                                 <th>Description</th>
-                                                <th>Amount</th>
                                                 <th>Taxed</th>
+                                                <th>Amount</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @php
-                                                $items = $invoice['items'];
-
+                                            $items = $invoice['items']['item'] ?? $invoice['item'] ?? [];
                                             @endphp
+
                                             @foreach ($items as $item)
+
                                             <tr>
-                                                <td>Maxwell Clark - abcgmail.com</td>
-                                                <td>$1.00 USD</td>
-                                                <td>—</td>
+                                                <td>{{ $item['description'] ?? '-' }}</td>
+                                                <td>{{ $item['tax'] ?? '-' }}</td>
+                                                <td>${{ number_format($item['amount']) }} USD</td>
                                             </tr>
-
                                             @endforeach
-
+                                            <tr class="table-active">
+                                                <th colspan="2" class="text-end">Sub Total:</th>
+                                                <td>{{ $invoice['subtotal'] ?? '—' }} USD</td>
+                                            </tr>
 
                                         </tbody>
                                     </table>
@@ -288,8 +326,8 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    @if ($invoice['transactions']  != '')
-                                                     <tr>
+                                                    @if ($invoice['transactions'] != '')
+                                                    <tr>
                                                         <td colspan="3" class="text-center"> Records Found</td>
                                                     </tr>
                                                     @else
