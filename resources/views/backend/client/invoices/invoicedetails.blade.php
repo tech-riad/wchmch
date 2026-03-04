@@ -147,14 +147,11 @@
                                         </div>
                                         <!-- Tab 2: Add Payment -->
                                         <div class="tab-pane fade" id="addpayment" role="tabpanel">
-                                            <form
-                                                action="{{route('admin.users.invoice.paymentadd',$invoice['invoiceid'])}}"
-                                                method="POST">
-                                                @csrf
-                                                @if ($invoice['status'] != 'Paid')
 
 
-                                                <div class="row g-3">
+                                            @if ($invoice['status'] == 'Paid')
+                                            <div class="row g-3">
+
                                                     <div class="alert alert-info d-flex align-items-start" role="alert">
                                                     <div class="me-2">
                                                         <i class="ti ti-info-circle fs-4"></i>
@@ -163,12 +160,21 @@
                                                         <h6 class="alert-heading mb-1">This is a {{$invoice['status']}} Invoice.</h6>
                                                         <p class="mb-0">
                                                         The system can only apply payments to an invoice in
-                                                        <strong>Unpaid</strong> status.
+                                                        <strong>Paid</strong> status.
                                                         </p>
                                                     </div>
                                                     </div>
-                                                </div>
-                                                @else
+                                            </div>
+
+
+                                            @elseif($invoice['status'] == 'Unaid')
+                                            <form
+                                                action="{{route('admin.users.invoice.paymentadd',$invoice['invoiceid'])}}"
+                                                method="POST">
+                                                @csrf
+
+
+
                                                 <div class="row g-3">
                                                     <div class="col-md-6"><label class="form-label">Date</label>
                                                         <input type="date" class="form-control" name="date"
@@ -206,6 +212,23 @@
                                                     <div class="col-12"><button type="submit"
                                                             class="btn btn-primary">Add
                                                             Payment</button></div>
+                                                </div>
+
+                                                @else
+                                                <div class="row g-3">
+
+                                                        <div class="alert alert-info d-flex align-items-start" role="alert">
+                                                        <div class="me-2">
+                                                            <i class="ti ti-info-circle fs-4"></i>
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="alert-heading mb-1">This is a {{$invoice['status']}} Invoice.</h6>
+                                                            <p class="mb-0">
+                                                            The system can only apply payments to an invoice in
+                                                            <strong>Paid</strong> status.
+                                                            </p>
+                                                        </div>
+                                                        </div>
                                                 </div>
                                                 @endif
                                             </form>

@@ -16,7 +16,7 @@ class InvoiceDetailsController extends Controller
             'invoiceid' => $invoiceid,
         ]);
 
-        // dd($invoice);
+        dd($invoice);
         $client = $whmcs->call('GetClientsDetails', [
             'clientid' => $invoice['userid'],
             'stats' => true,
@@ -37,7 +37,7 @@ class InvoiceDetailsController extends Controller
     }
     public function invoicePaymentAdd(Request $request, WhmcsService $whmcs )
     {
-        dd($request->all());
+        // dd($request->all());
         $invoiceid = $request->invoiceid;
 
         // dd($invoiceid);
@@ -51,6 +51,7 @@ class InvoiceDetailsController extends Controller
             'clientid' => $invoice['userid'],
             'stats' => true,
         ]);
+
         // dd($client);
 
         $paymentMethodApi = $whmcs->call('GetPaymentMethods', [
@@ -60,11 +61,19 @@ class InvoiceDetailsController extends Controller
         $paymethodMethods = $paymentMethodApi['paymentmethods']['paymentmethod']?? [];
 
 
+        $addInvoicePayment = $whmcs->call('AddInvoicePayment', [
+            'invoiceid' => $invoiceid,
+            'transid' => $request->transid,
+            'gateway' => $request->paymentmethod,
+            'date' => $request->date,
+        ]);
+        $addInvoicePayment = $whmcs->call('AddInvoicePayment', [
+            'invoiceid' => $invoiceid,
+            'status' => 'Paid',
 
+        ]);
 
-
-
-        return view('backend.client.invoices.invoicedetails',compact('invoice','client','paymethodMethods'));
+        return redirect()->back()->with('success', 'Payment added successfully');
     }
 
 }
