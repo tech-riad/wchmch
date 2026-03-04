@@ -665,7 +665,7 @@
                                                                 <tr>
                                                                     <td class="fieldarea" width="30%">{{ $item['id'] }}
                                                                         - <a
-                                                                            href="orders.php?action=view&amp;id={{ $item['id'] }}">View
+                                                                            href="#">View
                                                                             Order</a></td>
                                                                     <td>{{ $item['billingcycle'] }}</td>
                                                                     <td>{{ $item['nextduedate'] }}</td>

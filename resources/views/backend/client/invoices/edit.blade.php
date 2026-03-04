@@ -2,6 +2,7 @@
 
 @section('content')
 
+
 <div class="layout-wrapper layout-content-navbar">
     <div class="layout-container">
 
@@ -54,12 +55,25 @@
             <!-- Content wrapper -->
             <div class="content-wrapper">
                 <div class="container-xxl flex-grow-1 container-p-y">
+                    @if(session('success'))
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="ti ti-circle-check me-2"></i>{{ session('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+@endif
+
+@if(session('error'))
+  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="ti ti-alert-triangle me-2"></i>{{ session('error') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+@endif
 
                     <!-- INVOICE HEADER with Vuexy style elements -->
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h4 class="fw-bold">Invoice #{{$invoice['invoiceid']}}</h4>
                         <div class="btn-group">
-                            <a class="btn btn-outline-primary btn-sm" href="{{route('admin.users.invoice.edit',$invoice['invoiceid'] )}}"><i
+                            <a class="btn btn-outline-primary btn-sm" href="#"><i
                                     class="icon-base ti tabler-edit me-1"></i>Manage</a>
                             <button class="btn btn-outline-secondary btn-sm"><i
                                     class="icon-base ti tabler-printer me-1"></i>Print</button>
@@ -76,30 +90,50 @@
                         <div class="col-xl-12 col-lg-12">
                             <div class="card">
                                 <div class="card-header p-0 pt-2 px-3">
+                                    <div class="row">
+                                        <div class="col-lg-8">
+                                            <ul class="nav nav-tabs" role="tablist">
+                                            <li class="nav-item"><a class="nav-link active" id="summary-tab"
+                                                    data-bs-toggle="tab" href="#summary" role="tab"><i
+                                                        class="icon-base ti tabler-file-text me-1"></i>Summary</a></li>
+                                            <li class="nav-item"><a class="nav-link" id="payment-tab" data-bs-toggle="tab"
+                                                    href="#addpayment" role="tab"><i
+                                                        class="icon-base ti tabler-plus-circle me-1"></i>Add Payment</a>
+                                            </li>
+                                            <li class="nav-item"><a class="nav-link" id="credit-tab" data-bs-toggle="tab"
+                                                    href="#credit" role="tab"><i
+                                                        class="icon-base ti tabler-coin me-1"></i>Credit</a></li>
+                                            <li class="nav-item"><a class="nav-link" id="refund-tab" data-bs-toggle="tab"
+                                                    href="#refund" role="tab"><i
+                                                        class="icon-base ti tabler-receipt-refund me-1"></i>Refund</a></li>
+                                            <li class="nav-item"><a class="nav-link" id="notes-tab" data-bs-toggle="tab"
+                                                    href="#notes" role="tab"><i
+                                                        class="icon-base ti tabler-notes me-1"></i>Notes</a></li>
+                                        </ul>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <div class="row">
+                                                <div class="d-flex gap-2 mb-3">
+                                                    <button class="btn btn-primary">
+                                                    <i class="ti ti-send me-1"></i> Publish
+                                                    </button>
+
+                                                    <button class="btn btn-warning">
+                                                    <i class="ti ti-mail me-1"></i> Publish & Send Email
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <!-- Tabs navigation (Vuexy style) -->
-                                    <ul class="nav nav-tabs" role="tablist">
-                                        <li class="nav-item"><a class="nav-link active" id="summary-tab"
-                                                data-bs-toggle="tab" href="#summary" role="tab"><i
-                                                    class="icon-base ti tabler-file-text me-1"></i>Summary</a></li>
-                                        <li class="nav-item"><a class="nav-link" id="payment-tab" data-bs-toggle="tab"
-                                                href="#addpayment" role="tab"><i
-                                                    class="icon-base ti tabler-plus-circle me-1"></i>Add Payment</a>
-                                        </li>
-                                        <li class="nav-item"><a class="nav-link" id="credit-tab" data-bs-toggle="tab"
-                                                href="#credit" role="tab"><i
-                                                    class="icon-base ti tabler-coin me-1"></i>Credit</a></li>
-                                        <li class="nav-item"><a class="nav-link" id="refund-tab" data-bs-toggle="tab"
-                                                href="#refund" role="tab"><i
-                                                    class="icon-base ti tabler-receipt-refund me-1"></i>Refund</a></li>
-                                        <li class="nav-item"><a class="nav-link" id="notes-tab" data-bs-toggle="tab"
-                                                href="#notes" role="tab"><i
-                                                    class="icon-base ti tabler-notes me-1"></i>Notes</a></li>
-                                    </ul>
+
                                 </div>
                                 <div class="card-body">
                                     <div class="tab-content p-0">
                                         <!-- Tab 1: Summary (original WHMCS fields) -->
                                         <div class="tab-pane fade show active" id="summary" role="tabpanel">
+
+
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <table class="table table-sm">
@@ -390,41 +424,350 @@
                             </div>
 
                             <!-- Additional card for Invoice Items (like original but in Vuexy style) -->
-                            <div class="card mt-6">
-                                <div class="card-header">
-                                    <h5 class="mb-0">Invoice Items</h5>
+                            <form id="frmInvoiceItems"
+                                method="post"
+                                action="{{ route('admin.users.invoice.update', $invoice['invoiceid']) }}"
+                                onreset="handleInvoiceItemReset(event)">
+                                @csrf
+                                @method('PUT')
+
+                                {{-- store deleted existing line ids --}}
+                                <input type="hidden" name="deletelineids" id="deletelineids" value="">
+
+                                <div class="card">
+                                    <div class="card-header d-flex align-items-center justify-content-between">
+                                        <h6 class="mb-0">Invoice Items</h6>
+                                        <button type="button" class="btn btn-primary btn-sm" id="addNewItemBtn" onclick="addInvoiceItem();">
+                                            <i class="ti ti-plus me-1"></i> Add Item
+                                        </button>
+                                    </div>
+
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="width:42px;" class="text-center">
+                                                        <input class="form-check-input" type="checkbox" id="checkAllItems">
+                                                    </th>
+                                                    <th>Description</th>
+                                                    <th style="width:160px;" class="text-center">Amount</th>
+                                                    <th style="width:90px;" class="text-center">Taxed</th>
+                                                    <th style="width:70px;" class="text-center">Action</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody id="itemsTbody">
+                                                @php
+                                                    // ✅ WHMCS invoice items safe handle
+                                                    $items = $invoice['items']['item'] ?? $invoice['item'] ?? [];
+                                                    // single item হলে associative array আসে
+                                                    if (!empty($items) && isset($items['id'])) {
+                                                        $items = [$items];
+                                                    }
+                                                @endphp
+
+                                                @forelse($items as $i => $it)
+                                                    <tr data-index="{{ $i }}">
+                                                        <td class="text-center">
+                                                            {{-- existing line id --}}
+                                                            <input type="hidden" name="items[{{ $i }}][itemid]" value="{{ $it['id'] ?? '' }}">
+
+                                                            {{-- select checkbox (for batch delete/split) --}}
+                                                            <input class="form-check-input item-check" type="checkbox"
+                                                                name="items[{{ $i }}][id]" value="{{ $it['id'] ?? '' }}">
+                                                        </td>
+
+                                                        <td>
+                                                            <textarea name="items[{{ $i }}][description]" rows="1"
+                                                                    class="form-control"
+                                                                    oninput="markDirty()">{{ $it['description'] ?? '' }}</textarea>
+                                                        </td>
+
+                                                        <td class="text-center">
+                                                            <div class="input-group input-group-sm">
+                                                                <span class="input-group-text">$</span>
+                                                                <input type="text"
+                                                                    name="items[{{ $i }}][amount]"
+                                                                    value="{{ $it['amount'] ?? '' }}"
+                                                                    class="form-control text-center"
+                                                                    oninput="markDirty()"
+                                                                    onblur="updateInvoiceTotal()">
+                                                            </div>
+                                                        </td>
+
+                                                        <td class="text-center">
+                                                            <input class="form-check-input" type="checkbox"
+                                                                name="items[{{ $i }}][taxed]" value="1"
+                                                                onchange="markDirty();updateInvoiceTotal()"
+                                                                @if(($it['taxed'] ?? 0)==1) checked @endif>
+                                                        </td>
+
+                                                        <td class="text-center">
+                                                            <a href="#" class="text-danger" onclick="deleteInvoiceItem(event);">
+                                                                <i class="ti ti-trash"></i>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                @empty
+                                                    {{-- no item থাকলে 1টা blank row --}}
+                                                    <tr data-index="0">
+                                                        <td class="text-center">
+                                                            <input class="form-check-input item-check" type="checkbox" name="items[0][id]" value="">
+                                                        </td>
+                                                        <td>
+                                                            <textarea name="items[0][description]" rows="1" class="form-control" oninput="markDirty()"></textarea>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <div class="input-group input-group-sm">
+                                                                <span class="input-group-text">$</span>
+                                                                <input type="text" name="items[0][amount]" class="form-control text-center"
+                                                                    oninput="markDirty()" onblur="updateInvoiceTotal()">
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <input class="form-check-input" type="checkbox" name="items[0][taxed]" value="1"
+                                                                onchange="markDirty();updateInvoiceTotal()">
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <a href="#" class="text-danger" onclick="deleteInvoiceItem(event);">
+                                                                <i class="ti ti-trash"></i>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                @endforelse
+
+                                                {{-- marker row --}}
+                                                <tr class="addCloneBefore"></tr>
+                                            </tbody>
+
+                                            <tfoot class="table-light">
+                                                <tr>
+                                                    <td colspan="2">
+                                                        <div class="d-flex gap-2 align-items-center">
+                                                            <select name="selaction"
+                                                                    class="form-select form-select-sm"
+                                                                    style="max-width:220px"
+                                                                    onchange="handleBatchAction(this)">
+                                                                <option value="">- With Selected -</option>
+                                                                <option value="split">Split to New Invoice</option>
+                                                                <option value="delete">Delete</option>
+                                                            </select>
+                                                            <small class="text-muted">Select items then choose an action.</small>
+                                                        </div>
+                                                    </td>
+
+                                                    <td class="text-center fw-semibold">
+                                                        <div>Sub Total</div>
+                                                        <div id="invoiceSubtotal">$0.00 USD</div>
+                                                    </td>
+
+                                                    <td class="text-center fw-semibold" colspan="2">
+                                                        <div>Invoice Amount</div>
+                                                        <div id="invoiceTotal">$0.00 USD</div>
+                                                    </td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+
+                                    <div class="card-body d-flex justify-content-center gap-2">
+                                        <button type="button" class="btn btn-primary" onclick="handleInvoiceSaveChanges(this)">
+                                            <i class="ti ti-device-floppy me-1"></i> Save Changes
+                                        </button>
+                                        <button type="reset" class="btn btn-outline-secondary">
+                                            <i class="ti ti-x me-1"></i> Cancel Changes
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="table-responsive">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Description</th>
-                                                <th>Taxed</th>
-                                                <th>Amount</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @php
-                                            $items = $invoice['items']['item'] ?? $invoice['item'] ?? [];
-                                            @endphp
+                            </form>
 
-                                            @foreach ($items as $item)
+                            <script>
+                            // -------------------------------
+                            // Deleted line ids storage
+                            // -------------------------------
+                            let deletedLineIds = [];
 
-                                            <tr>
-                                                <td>{{ $item['description'] ?? '-' }}</td>
-                                                <td>{{ $item['tax'] ?? '-' }}</td>
-                                                <td>${{ number_format($item['amount']) }} USD</td>
-                                            </tr>
-                                            @endforeach
-                                            <tr class="table-active">
-                                                <th colspan="2" class="text-end">Sub Total:</th>
-                                                <td>{{ $invoice['subtotal'] ?? '—' }} USD</td>
-                                            </tr>
+                            function syncDeletedLineIds() {
+                                const input = document.getElementById('deletelineids');
+                                if (input) input.value = deletedLineIds.join(',');
+                            }
 
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                            // -------------------------------
+                            // Dirty Banner (optional)
+                            // -------------------------------
+                            function markDirty() {
+                                const a = document.getElementById('unsavedChangesAlert');
+                                if (a) a.classList.remove('d-none');
+                            }
+                            function clearDirty() {
+                                const a = document.getElementById('unsavedChangesAlert');
+                                if (a) a.classList.add('d-none');
+                            }
+
+                            // -------------------------------
+                            // Select All
+                            // -------------------------------
+                            document.getElementById('checkAllItems')?.addEventListener('change', function () {
+                                document.querySelectorAll('#itemsTbody .item-check').forEach(cb => cb.checked = this.checked);
+                            });
+
+                            // -------------------------------
+                            // Add Item
+                            // -------------------------------
+                            function addInvoiceItem() {
+                                const tbody = document.getElementById('itemsTbody');
+                                const marker = tbody.querySelector('tr.addCloneBefore');
+
+                                const rows = tbody.querySelectorAll('tr[data-index]');
+                                const nextIndex = rows.length ? (parseInt(rows[rows.length - 1].dataset.index, 10) + 1) : 0;
+
+                                const html = `
+                                <tr data-index="${nextIndex}">
+                                    <td class="text-center">
+                                    <input class="form-check-input item-check" type="checkbox" name="items[${nextIndex}][id]" value="">
+                                    </td>
+                                    <td>
+                                    <textarea name="items[${nextIndex}][description]" rows="1" class="form-control" oninput="markDirty()"></textarea>
+                                    </td>
+                                    <td class="text-center">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">$</span>
+                                        <input type="text" name="items[${nextIndex}][amount]" class="form-control text-center"
+                                            oninput="markDirty()" onblur="updateInvoiceTotal()">
+                                    </div>
+                                    </td>
+                                    <td class="text-center">
+                                    <input class="form-check-input" type="checkbox" name="items[${nextIndex}][taxed]" value="1"
+                                            onchange="markDirty();updateInvoiceTotal()">
+                                    </td>
+                                    <td class="text-center">
+                                    <a href="#" class="text-danger" onclick="deleteInvoiceItem(event);">
+                                        <i class="ti ti-trash"></i>
+                                    </a>
+                                    </td>
+                                </tr>
+                                `;
+
+                                marker.insertAdjacentHTML('beforebegin', html);
+                                markDirty();
+
+                                const newTextarea = tbody.querySelector(`tr[data-index="${nextIndex}"] textarea`);
+                                if (newTextarea) newTextarea.focus();
+                            }
+
+                            // -------------------------------
+                            // Delete single row
+                            // If row has existing itemid, add to deletelineids
+                            // -------------------------------
+                            function deleteInvoiceItem(event) {
+                                event.preventDefault();
+                                const tr = event.currentTarget.closest('tr');
+                                if (!tr) return;
+
+                                const itemIdInput = tr.querySelector('input[name$="[itemid]"]');
+                                const lineId = itemIdInput ? parseInt(itemIdInput.value, 10) : null;
+
+                                if (lineId) {
+                                deletedLineIds.push(lineId);
+                                // unique
+                                deletedLineIds = Array.from(new Set(deletedLineIds));
+                                syncDeletedLineIds();
+                                }
+
+                                tr.remove();
+                                markDirty();
+                                updateInvoiceTotal(true);
+                            }
+
+                            // -------------------------------
+                            // With Selected
+                            // delete => remove selected rows (and track existing line ids)
+                            // split => submit server-side
+                            // -------------------------------
+                            function handleBatchAction(select) {
+                                if (!select.value) return;
+
+                                if (select.value === 'delete') {
+                                document.querySelectorAll('#itemsTbody .item-check:checked').forEach(cb => {
+                                    const tr = cb.closest('tr');
+                                    const itemIdInput = tr?.querySelector('input[name$="[itemid]"]');
+                                    const lineId = itemIdInput ? parseInt(itemIdInput.value, 10) : null;
+
+                                    if (lineId) deletedLineIds.push(lineId);
+                                    tr?.remove();
+                                });
+
+                                deletedLineIds = Array.from(new Set(deletedLineIds));
+                                syncDeletedLineIds();
+
+                                markDirty();
+                                updateInvoiceTotal(true);
+                                select.value = '';
+                                return;
+                                }
+
+                                // split => submit
+                                select.form.submit();
+                            }
+
+                            // -------------------------------
+                            // Save Changes (simple validation)
+                            // -------------------------------
+                            function handleInvoiceSaveChanges(btn) {
+                                let ok = true;
+
+                                document.querySelectorAll('#itemsTbody tr[data-index]').forEach(tr => {
+                                const desc = tr.querySelector('textarea[name$="[description]"]')?.value?.trim();
+                                const amt  = tr.querySelector('input[name$="[amount]"]')?.value?.trim();
+
+                                // skip fully empty row
+                                if (!desc && !amt) return;
+
+                                if ((desc && !amt) || (!desc && amt)) ok = false;
+                                });
+
+                                if (!ok) {
+                                alert('You must enter both Description and Amount for each line item.');
+                                return;
+                                }
+
+                                clearDirty();
+                                btn.closest('form').submit();
+                            }
+
+                            // -------------------------------
+                            // Reset
+                            // -------------------------------
+                            function handleInvoiceItemReset() {
+                                deletedLineIds = [];
+                                syncDeletedLineIds();
+                                clearDirty();
+                                setTimeout(() => updateInvoiceTotal(true), 0);
+                            }
+
+                            // -------------------------------
+                            // Totals (frontend)
+                            // -------------------------------
+                            function updateInvoiceTotal(force) {
+                                let subtotal = 0;
+
+                                document.querySelectorAll('#itemsTbody tr[data-index]').forEach(tr => {
+                                const amt = tr.querySelector('input[name$="[amount]"]')?.value || '0';
+                                const num = parseFloat(amt.toString().replace(/[^0-9.\-]/g, ''));
+                                if (!isNaN(num)) subtotal += num;
+                                });
+
+                                const fmt = subtotal.toFixed(2);
+                                const subEl = document.getElementById('invoiceSubtotal');
+                                const totEl = document.getElementById('invoiceTotal');
+                                if (subEl) subEl.innerHTML = `$${fmt} USD`;
+                                if (totEl) totEl.innerHTML = `$${fmt} USD`;
+                            }
+
+                            // initial
+                            updateInvoiceTotal(true);
+                            syncDeletedLineIds();
+                            </script>
 
                             <!-- Ledger & Transaction History placed in one row (responsive) -->
 

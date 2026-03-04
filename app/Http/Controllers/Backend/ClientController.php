@@ -925,8 +925,11 @@ class ClientController extends Controller
 
     public function clientProductShow(WhmcsService $whmcs, Request $request)
     {
+
         $clientId  = (int) $request->route('clientid');
         $productId = (string) $request->route('productid');
+
+        // dd($productId);
 
         $clientResp = $whmcs->call('GetClientsDetails', [
             'clientid' => $clientId,
@@ -954,6 +957,7 @@ class ClientController extends Controller
         ]);
 
         $productsclient = $respclientproducts['products']['product'] ?? [];
+        // dd($productsclient);
 
         if (!empty($productsclient) && isset($productsclient['id'])) {
             $productsclient = [$productsclient];
@@ -988,7 +992,7 @@ class ClientController extends Controller
             $grouped[$groupName][] = $p;
         }
 
-        // dd($latestProduct);
+
         return view('backend.client.product.show', [
             'products'         => $products,
             'client'           => $client,
@@ -1083,7 +1087,7 @@ class ClientController extends Controller
             'order'   => 'desc',
         ]);
 
-        $invoices = $invoicesResp['invoices']['invoice'];
+        $invoices = $invoicesResp['invoices']['invoice'] ?? [];
 
 
         // dd($invoices);
