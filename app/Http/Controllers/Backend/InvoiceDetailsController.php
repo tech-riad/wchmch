@@ -87,31 +87,25 @@ class InvoiceDetailsController extends Controller
             $desc = trim((string)($row['description'] ?? ''));
             $amt  = trim((string)($row['amount'] ?? ''));
 
-            // empty row skip
             if ($desc === '' && $amt === '') {
                 continue;
             }
 
-            // basic validation
             if ($desc === '' || $amt === '') {
                 return redirect()->back()->with('error', 'Each line must have both Description and Amount.');
             }
 
-            // normalize amount
             $amtNum = (float) preg_replace('/[^0-9.\-]/', '', $amt);
 
-            // checkbox: if not sent => not taxed
             $taxed = isset($row['taxed']) ? true : false;
 
             $lineId = isset($row['itemid']) && is_numeric($row['itemid']) ? (int)$row['itemid'] : null;
 
             if ($lineId) {
-                // existing line update
                 $itemdescription[$lineId] = $desc;
                 $itemamount[$lineId]      = $amtNum;
                 $itemtaxed[$lineId]       = $taxed;
             } else {
-                // new line add
                 $newitemdescription[] = $desc;
                 $newitemamount[]      = $amtNum;
                 $newitemtaxed[]       = $taxed;
@@ -120,8 +114,6 @@ class InvoiceDetailsController extends Controller
 
         $payload = [
             'invoiceid' => (int)$invoiceid,
-            // optional:
-            // 'status' => $request->input('status', 'Unpaid'),
         ];
 
         if (!empty($itemdescription)) {
@@ -153,7 +145,6 @@ class InvoiceDetailsController extends Controller
         // dd($request->all());
         $invoiceid = $request->invoiceid;
 
-        // dd($invoiceid);
 
         $invoice = $whmcs->call('GetInvoice', [
             'invoiceid' => $invoiceid,
@@ -165,7 +156,6 @@ class InvoiceDetailsController extends Controller
             'stats' => true,
         ]);
 
-        // dd($client);
 
         $paymentMethodApi = $whmcs->call('GetPaymentMethods', [
             'limitstart' => 0,
