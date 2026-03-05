@@ -70,7 +70,7 @@
                     @endif
 
                     <!-- INVOICE HEADER with Vuexy style elements -->
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    {{-- <div class="d-flex justify-content-between align-items-center mb-4">
                         <h4 class="fw-bold">Invoice #{{$invoice['invoiceid']}}</h4>
                         <div class="btn-group">
                             <a class="btn btn-outline-primary btn-sm" href="#"><i
@@ -80,7 +80,7 @@
                             <button class="btn btn-outline-secondary btn-sm"><i
                                     class="icon-base ti tabler-download me-1"></i>PDF</button>
                         </div>
-                    </div>
+                    </div> --}}
 
                     <!-- Two column layout: left = invoice summary card, right = tabs -->
                     <div class="row g-6">
@@ -433,11 +433,20 @@
 
                                 {{-- store deleted existing line ids --}}
                                 <input type="hidden" name="deletelineids" id="deletelineids" value="">
+                                @if($invoice['status'] == 'Unpaid')
 
-                                <div class="card">
+                                @else
+                                <div class=" mt-5 alert alert-success alert-dismissible fade show" role="alert">
+                                    <i class="ti ti-circle-check me-2"></i> This is an {{ $invoice['status'] }} Invoice.
+                                        You cannot modify an Invoice that is {{ $invoice['status'] }}.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                                @endif
+
+                                <div class="card mt-5">
                                     <div class="card-header d-flex align-items-center justify-content-between">
                                         <h6 class="mb-0">Invoice Items</h6>
-                                        <button type="button" class="btn btn-primary btn-sm" id="addNewItemBtn" onclick="addInvoiceItem();">
+                                        <button @disabled($invoice['status'] != 'Unpaid') type="button" class="btn btn-primary btn-sm" id="addNewItemBtn" onclick="addInvoiceItem();">
                                             <i class="ti ti-plus me-1"></i> Add Item
                                         </button>
                                     </div>
@@ -458,21 +467,15 @@
 
                                             <tbody id="itemsTbody">
                                                 @php
-                                                    // ✅ WHMCS invoice items safe handle
                                                     $items = $invoice['items']['item'] ?? $invoice['item'] ?? [];
-                                                    // single item হলে associative array আসে
-                                                    if (!empty($items) && isset($items['id'])) {
-                                                        $items = [$items];
-                                                    }
+
                                                 @endphp
 
                                                 @forelse($items as $i => $it)
                                                     <tr data-index="{{ $i }}">
                                                         <td class="text-center">
-                                                            {{-- existing line id --}}
                                                             <input type="hidden" name="items[{{ $i }}][itemid]" value="{{ $it['id'] ?? '' }}">
 
-                                                            {{-- select checkbox (for batch delete/split) --}}
                                                             <input class="form-check-input item-check" type="checkbox"
                                                                 name="items[{{ $i }}][id]" value="{{ $it['id'] ?? '' }}">
                                                         </td>
@@ -571,7 +574,7 @@
                                     </div>
 
                                     <div class="card-body d-flex justify-content-center gap-2">
-                                        <button type="button" class="btn btn-primary" onclick="handleInvoiceSaveChanges(this)">
+                                        <button @disabled($invoice['status'] != 'Unpaid') type="button" class="btn btn-primary" onclick="handleInvoiceSaveChanges(this)">
                                             <i class="ti ti-device-floppy me-1"></i> Save Changes
                                         </button>
                                         <button type="reset" class="btn btn-outline-secondary">
