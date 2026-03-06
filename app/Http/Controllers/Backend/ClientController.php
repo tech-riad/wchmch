@@ -5,11 +5,60 @@ namespace App\Http\Controllers\Backend;
 use App\Http\Controllers\Controller;
 use App\Services\WhmcsService;
 use Illuminate\Http\Request; // use Symfony\Component\HttpFoundation\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class ClientController extends Controller
 {
+    public function transaction(Request $request, WhmcsService $whmcs, $clientid)
+    {
+        $resp = $whmcs->call('GetClientsDetails', [
+            'clientid' => $clientid,
+        ]);
+
+        $transactions = $whmcs->call('GetTransactions', [
+            'clientid' => $clientid,
+        ]);
+
+        $transactionsList = collect($transactions['transactions']['transaction'] ?? [])
+                            ->where('amountout', 0)
+                            ->sortByDesc('id')
+                            ->values();
+
+            // dd($transactionsList);
+
+        $totalIn = $transactionsList->sum(fn($t) => (float) ($t['amountin'] ?? 0));
+        $totalFees = $transactionsList->sum(fn($t) => (float) ($t['fees'] ?? 0));
+        $totalOut = $transactionsList->sum(fn($t) => (float) ($t['amountout'] ?? 0));
+        $balance = $totalIn - $totalOut - $totalFees;
+
+        $perPage = 10;
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $currentItems = $transactionsList->slice(($currentPage - 1) * $perPage, $perPage)->values();
+
+        $paginatedTransactions = new LengthAwarePaginator(
+            $currentItems,
+            $transactionsList->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
+
+        return view('backend.client.transaction.transaction', [
+            'client' => $resp['client'] ?? [],
+            'transactions' => $paginatedTransactions,
+            'stats' => [
+                'total_in' => $totalIn,
+                'total_fees' => $totalFees,
+                'total_out' => $totalOut,
+                'balance' => $balance,
+            ],
+        ]);
+    }
     public function index(WhmcsService $whmcs)
     {
         $resp = $whmcs->call('GetClients', [

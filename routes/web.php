@@ -51,6 +51,11 @@ Route::middleware(['web', 'auth','whmcsAdmin'])->group(function () {
     Route::get('/users/invoice/details/{invoiceid}', [InvoiceDetailsController::class, 'invoiceDetails'])->name('admin.users.invoice.details');
     Route::post('/users/invoice/details/add-payment/{invoiceid}', [InvoiceDetailsController::class, 'invoicePaymentAdd'])->name('admin.users.invoice.paymentadd');
 
+    // Transactions
+    Route::get('/users/transaction/{clientid}', [ClientController::class, 'transaction'])->name('admin.users.transaction');
+
+
+
     Route::prefix('admin')->group(function () {
     Route::get('/orders/create/{clientId}', [ClientController::class, 'createOrder'])->name('admin.orders.create');
     Route::post('/orders/store', [ClientController::class, 'storeOrder'])->name('admin.orders.store');
