@@ -29,7 +29,7 @@
                             class="icon-base ti tabler-link icon-sm me-1_5"></i>Invoices</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.users.transaction') ? 'active' : '' }}" href="{{ route('admin.users.transaction', ['clientid' => $client['id']]) }}"><i
+                    <a class="nav-link {{ request()->routeIs('admin.users.transaction') || request()->routeIs('admin.users.addtransaction')  ? 'active' : '' }}" href="{{ route('admin.users.transaction', ['clientid' => $client['id']]) }}"><i
                             class="icon-base ti tabler-link icon-sm me-1_5"></i>Transactions</a>
                 </li>
             </ul>

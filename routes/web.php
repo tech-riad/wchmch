@@ -53,6 +53,8 @@ Route::middleware(['web', 'auth','whmcsAdmin'])->group(function () {
 
     // Transactions
     Route::get('/users/transaction/{clientid}', [ClientController::class, 'transaction'])->name('admin.users.transaction');
+    Route::get('/users/add-transaction/{clientid}', [ClientController::class, 'addTransaction'])->name('admin.users.addtransaction');
+    Route::post('/users/store-transaction/{clientid}', [ClientController::class, 'storeTransaction'])->name('admin.users.storetransaction');
 
 
 
