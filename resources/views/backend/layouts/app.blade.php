@@ -81,6 +81,8 @@
 
     @stack('scripts')
 
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/flatpickr/flatpickr.css') }}">
+    <script src="{{ asset('assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
 
     <script src="{{ asset('assets/vendor/libs/jquery/jquery.js') }}"></script>
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Services\WhmcsService;
+use Carbon\Carbon;
 use Illuminate\Http\Request; // use Symfony\Component\HttpFoundation\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
@@ -11,6 +12,162 @@ use Illuminate\Support\Str;
 
 class ClientController extends Controller
 {
+
+    public function updateTransaction(Request $request, WhmcsService $whmcs, $clientid, $transactionid)
+    {
+        $request->merge([
+            'userid' => $clientid,
+            'date' => $request->date ? trim($request->date) : null,
+            'description' => $request->description ? trim($request->description) : null,
+            'transid' => $request->transid ? trim($request->transid) : null,
+            'invoiceid' => $request->invoiceid ? trim($request->invoiceid) : null,
+            'amountin' => $request->amountin !== null ? trim($request->amountin) : null,
+            'amountout' => $request->amountout !== null ? trim($request->amountout) : null,
+            'fees' => $request->fees !== null ? trim($request->fees) : null,
+            'paymentmethod' => $request->paymentmethod ? trim($request->paymentmethod) : null,
+            'rate' => $request->rate ? trim($request->rate) : '1.00000',
+        ]);
+
+        $request->validate([
+            'date' => ['required', 'date_format:d/m/Y'],
+            'paymentmethod' => ['required', 'string'],
+
+            'description' => ['nullable', 'string', 'max:255', 'required_without:invoiceid'],
+            'invoiceid' => ['nullable', 'integer', 'min:1', 'required_without:description'],
+
+            'amountin' => ['nullable', 'numeric', 'min:0'],
+            'amountout' => ['nullable', 'numeric', 'min:0'],
+            'fees' => ['nullable', 'numeric', 'min:0'],
+
+            'transid' => ['nullable', 'string', 'max:191'],
+            'rate' => ['nullable', 'numeric', 'min:0'],
+            'addcredit' => ['nullable', 'in:1'],
+        ], [
+            'date.required' => 'Transaction date is required.',
+            'date.date_format' => 'Date must be in dd/mm/yyyy format.',
+
+            'paymentmethod.required' => 'Payment method is required.',
+
+            'description.required_without' => 'Invoice ID or description is required.',
+            'invoiceid.required_without' => 'Invoice ID or description is required.',
+
+            'invoiceid.integer' => 'Invoice ID must be a valid number.',
+            'invoiceid.min' => 'Invoice ID must be greater than 0.',
+
+            'amountin.numeric' => 'Amount In must be a valid number.',
+            'amountout.numeric' => 'Amount Out must be a valid number.',
+            'fees.numeric' => 'Fees must be a valid number.',
+
+            'amountin.min' => 'Amount In cannot be negative.',
+            'amountout.min' => 'Amount Out cannot be negative.',
+            'fees.min' => 'Fees cannot be negative.',
+        ]);
+
+        $amountIn = (float) ($request->amountin ?? 0);
+        $amountOut = (float) ($request->amountout ?? 0);
+        $fees = (float) ($request->fees ?? 0);
+
+        if ($amountIn <= 0 && $amountOut <= 0) {
+            return redirect()->back()
+                ->withErrors([
+                    'amountin' => 'Amount In or Amount Out is required.'
+                ])
+                ->withInput();
+        }
+
+        if ($fees > 0 && $amountIn <= 0) {
+            return redirect()->back()
+                ->withErrors([
+                    'fees' => 'Fees cannot be added without Amount In.'
+                ])
+                ->withInput();
+        }
+
+        if ($fees > 0 && $amountIn > 0 && $fees >= $amountIn) {
+            return redirect()->back()
+                ->withErrors([
+                    'fees' => 'The fee being entered must be less than the Amount In value.'
+                ])
+                ->withInput();
+        }
+
+        if ($amountIn > 0 && $amountOut > 0) {
+            return redirect()->back()
+                ->withErrors([
+                    'amountout' => 'Amount In and Amount Out cannot both be greater than zero.'
+                ])
+                ->withInput();
+        }
+
+        $formattedDateTime = Carbon::createFromFormat('d/m/Y', $request->date)
+            ->setTimeFromTimeString(now()->format('H:i:s'))
+            ->format('Y-m-d H:i:s');
+
+        $postData = array_filter([
+            'transactionid' => $transactionid,
+            'paymentmethod' => $request->paymentmethod,
+            'userid' => $clientid,
+            'transid' => $request->transid,
+            'date' => $formattedDateTime,
+            'description' => $request->description,
+            'amountin' => $request->amountin,
+            'amountout' => $request->amountout,
+            'fees' => $request->fees,
+            'invoiceid' => $request->invoiceid,
+            'rate' => $request->rate ?? '1.00000',
+            'addcredit' => $request->has('addcredit') ? true : false,
+        ], function ($value) {
+            return $value !== null && $value !== '';
+        });
+
+        $response = $whmcs->call('UpdateTransaction', $postData);
+
+        if (($response['result'] ?? '') !== 'success') {
+            return redirect()->back()
+                ->withErrors([
+                    'api' => $response['message'] ?? 'Failed to update transaction.'
+                ])
+                ->withInput();
+        }
+
+        return redirect()
+            ->route('admin.users.transaction.edit', [
+                'clientid' => $clientid,
+                'transactionid' => $transactionid
+            ])
+            ->with('success', 'Transaction updated successfully.');
+    }
+    public function editTransaction(WhmcsService $whmcs, $clientid, $transactionid)
+    {
+
+        $resp = $whmcs->call('GetClientsDetails', [
+            'clientid' => $clientid,
+        ]);
+
+        $transactionResp = $whmcs->call('GetTransactions', [
+            'clientid' => $clientid,
+        ]);
+
+        $transactions = $transactionResp['transactions']['transaction'] ?? [];
+
+
+        $transactiondata = collect($transactions)
+                            ->where('id', $transactionid)
+                            ->first();
+
+        // dd($transactiondata);
+        $paymethodMethods = $whmcs->call('GetPaymentMethods');
+
+        $paymentMethods = $paymethodMethods['paymentmethods']['paymentmethod'] ?? [];
+
+
+        return view('backend.client.transaction.edit', [
+            'client' => $resp['client'] ?? [],
+            'transaction' => $transactiondata,
+            'paymethodMethods' => $paymentMethods,
+        ]);
+    }
+
     public function addTransaction(Request $request, WhmcsService $whmcs, $clientid)
     {
         $resp = $whmcs->call('GetClientsDetails', [

@@ -593,6 +593,16 @@
 
                     <!-- Navbar pills -->
                     @include('backend.client.nav')
+
+                    @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
                     <!--/ Navbar pills -->
 
                     <!-- User Profile Content -->
@@ -601,249 +611,158 @@
                             <!-- About User -->
                             <div class="card">
                                 <div class="tab-pane fade show active" id="profileContent">
-
-                                    <!-- Top action -->
-                                    <div class="d-flex justify-content-between align-items-center mb-4">
-                                        <div>
-                                        <h5 class="mb-0">Transactions</h5>
-                                        <small class="text-muted">Client transaction history</small>
-                                        </div>
-
-                                        <div class="context-btn-container">
-                                        <a href="{{route('admin.users.addtransaction',['clientid' => $client['id']])}}"
-                                            class="btn btn-primary">
-                                            <i class="ti ti-plus me-1"></i> Add New Transaction
-                                        </a>
-                                        </div>
-                                    </div>
-
-                                    <!-- Stats -->
-                                    <div class="row g-3 mb-4">
-                                        <div class="col-6 col-lg-3">
-                                        <div class="card h-100">
-                                            <div class="card-body">
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <div>
-                                                <h5 class="mb-0">{{ number_format($stats['total_in'], 2) }}</h5>
-                                                <small class="text-muted">Total In</small>
-                                                </div>
-                                                <span class="avatar avatar-sm bg-label-success">
-                                                <i class="ti ti-arrow-down"></i>
-                                                </span>
-                                            </div>
-                                            </div>
-                                        </div>
-                                        </div>
-
-                                        <div class="col-6 col-lg-3">
-                                        <div class="card h-100">
-                                            <div class="card-body">
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <div>
-                                                <h5 class="mb-0">{{ number_format($stats['total_fees'], 2) }}</h5>
-                                                <small class="text-muted">Total Fees</small>
-                                                </div>
-                                                <span class="avatar avatar-sm bg-label-warning">
-                                                <i class="ti ti-receipt-tax"></i>
-                                                </span>
-                                            </div>
-                                            </div>
-                                        </div>
-                                        </div>
-
-                                        <div class="col-6 col-lg-3">
-                                        <div class="card h-100">
-                                            <div class="card-body">
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <div>
-                                                <h5 class="mb-0">{{ number_format($stats['total_out'], 2) }}</h5>
-                                                <small class="text-muted">Total Out</small>
-                                                </div>
-                                                <span class="avatar avatar-sm bg-label-danger">
-                                                <i class="ti ti-arrow-up"></i>
-                                                </span>
-                                            </div>
-                                            </div>
-                                        </div>
-                                        </div>
-
-                                        <div class="col-6 col-lg-3">
-                                        <div class="card h-100">
-                                            <div class="card-body">
-                                            <div class="d-flex align-items-center justify-content-between">
-                                                <div>
-                                                <h5 class="mb-0">{{ number_format($stats['balance'], 2) }}</h5>
-                                                <small class="text-muted">Balance</small>
-                                                </div>
-                                                <span class="avatar avatar-sm bg-label-info">
-                                                <i class="ti ti-wallet"></i>
-                                                </span>
-                                            </div>
-                                            </div>
-                                        </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Records + Jump -->
-                                    <div class="card mb-4">
-                                        <div class="card-body py-3">
-                                        <form method="post" action="#" class="row g-2 align-items-center">
-                                            <input type="hidden" name="token" value="bec0623b3a12a2e5d8d4650be57a884d40cc1f9f">
-                                            <input type="hidden" name="userid" value="9">
-
-                                            <div class="col-md-6">
-                                            <div class="text-muted">
-                                                <strong class="text-body">1</strong> Records Found, Page
-                                                <strong class="text-body">1</strong> of <strong class="text-body">1</strong>
-                                            </div>
-                                            </div>
-
-                                            <div class="col-md-6">
-                                            <div class="d-flex justify-content-md-end align-items-center gap-2">
-                                                <span class="text-muted">Jump to Page:</span>
-                                                <select name="page" class="form-select form-select-sm" style="max-width:120px" onchange="this.form.submit()">
-                                                <option value="0" selected>1</option>
-                                                </select>
-                                                <button type="submit" class="btn btn-sm btn-outline-secondary">Go</button>
-                                            </div>
-                                            </div>
-                                        </form>
-                                        </div>
-                                    </div>
-
-                                    <!-- Table -->
                                     <div class="card">
-                                        <div class="card-header d-flex align-items-center justify-content-between">
-                                        <h6 class="mb-0">Transaction List</h6>
-
-                                        <div class="d-flex gap-2">
-                                            <input type="text" class="form-control form-control-sm" placeholder="Search..." style="max-width:220px">
-                                            <button class="btn btn-sm btn-outline-secondary">
-                                            <i class="ti ti-filter"></i>
-                                            </button>
-                                        </div>
+                                        <div class="card-header">
+                                            <h5 class="mb-0">Edit Transaction</h5>
                                         </div>
 
-                                        <div class="table-responsive">
-                                            <table class="table table-hover align-middle mb-0">
-                                                <thead class="table-light">
-                                                <tr>
-                                                    <th>
-                                                    <a class="text-decoration-none" href="#">
-                                                        Date
-                                                        <i class="ti ti-arrow-down ms-1 text-muted"></i>
-                                                    </a>
-                                                    </th>
-                                                    <th>
-                                                    <a class="text-decoration-none" href="#">
-                                                        Payment Method
-                                                    </a>
-                                                    </th>
-                                                    <th>
-                                                    <a class="text-decoration-none" href="#">
-                                                        Description
-                                                    </a>
-                                                    </th>
-                                                    <th class="text-end">
-                                                    <a class="text-decoration-none" href="#">
-                                                        Amount In
-                                                    </a>
-                                                    </th>
-                                                    <th class="text-end">
-                                                    <a class="text-decoration-none" href="#">
-                                                        Fees
-                                                    </a>
-                                                    </th>
-                                                    <th class="text-end">
-                                                    <a class="text-decoration-none" href="#">
-                                                        Amount Out
-                                                    </a>
-                                                    </th>
-                                                    <th class="text-center" style="width:90px;">Action</th>
-                                                </tr>
-                                                </thead>
+                                        <div class="card-body">
+                                            <form method="post"
+                                                action="{{ route('admin.users.transaction.update', ['clientid' => $client['id'], 'transactionid' => $transaction['id']]) }}">
+                                                @csrf
+                                                @method('PUT')
 
-                                                <tbody>
-                                                    @forelse($transactions as $t)
-                                                        <tr>
-                                                            <td style="white-space:nowrap;">
-                                                                {{ \Carbon\Carbon::parse($t['date'])->format('d/m/Y') }}
-                                                            </td>
+                                                <input type="hidden" name="rate" value="{{ old('rate', $transaction['rate'] ?? '1.00000') }}">
 
-                                                            <td>
-                                                                <span class="badge bg-label-primary">
-                                                                    {{ $t['gateway'] ?? 'N/A' }}
-                                                                </span>
-                                                            </td>
+                                                <div class="row g-3">
 
-                                                            <td class="text-muted">
-                                                                {{ $t['description'] ?? 'N/A' }}
+                                                       @php
+                                                            $rawDate = $transaction['date'] ?? null;
 
-                                                                @if(!empty($t['invoiceid']))
-                                                                    (<a href="{{route('admin.users.invoice.edit',$t['invoiceid'])}}" class="text-decoration-none">
-                                                                        #{{ $t['invoiceid'] }}
-                                                                    </a>)
-                                                                @endif
+                                                            $formattedDate = (
+                                                                !empty($rawDate) &&
+                                                                $rawDate !== '0000-00-00 00:00:00' &&
+                                                                $rawDate !== '0000-00-00'
+                                                            )
+                                                                ? date('d/m/Y', strtotime($rawDate))
+                                                                : date('d/m/Y');
+                                                        @endphp
 
-                                                                @if(!empty($t['transid']))
-                                                                    - Trans ID:
-                                                                    <span class="fw-semibold text-body">{{ $t['transid'] }}</span>
-                                                                @endif
-                                                            </td>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Date</label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">
+                                                                <i class="ti ti-calendar"></i>
+                                                            </span>
+                                                            <input type="text"
+                                                                id="transactionDate"
+                                                                name="date"
+                                                                value="{{ old('date', $formattedDate) }}"
+                                                                class="form-control flatpickr-date"
+                                                                placeholder="dd/mm/yyyy"
+                                                                autocomplete="off">
+                                                        </div>
+                                                    </div>
 
-                                                            <td class="text-end fw-semibold">
-                                                                ${{ number_format((float)($t['amountin'] ?? 0), 2) }} USD
-                                                            </td>
+                                                    <script>
+                                                        window.addEventListener('load', function () {
+                                                            const el = document.querySelector('#transactionDate');
 
-                                                            <td class="text-end text-muted">
-                                                                ${{ number_format((float)($t['fees'] ?? 0), 2) }} USD
-                                                            </td>
+                                                            if (el && typeof flatpickr !== 'undefined') {
+                                                                flatpickr(el, {
+                                                                    dateFormat: 'd/m/Y',
+                                                                    allowInput: true,
+                                                                    defaultDate: el.value || null
+                                                                });
+                                                            }
+                                                        });
+                                                    </script>
 
-                                                            <td class="text-end text-muted">
-                                                                ${{ number_format((float)($t['amountout'] ?? 0), 2) }} USD
-                                                            </td>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Amount In</label>
+                                                        <input type="text"
+                                                            name="amountin"
+                                                            class="form-control"
+                                                            placeholder="0.00"
+                                                            value="{{ old('amountin', $transaction['amountin'] ?? '') }}">
+                                                    </div>
 
-                                                            <td class="text-center">
-                                                                <div class="d-inline-flex gap-1">
-                                                                    <a href="{{ route('admin.users.transaction.edit', ['clientid' => $t['userid'], 'transactionid' => $t['id']]) }}"
-                                                                    class="btn btn-sm btn-icon btn-outline-primary"
-                                                                    data-bs-toggle="tooltip"
-                                                                    title="Edit">
-                                                                        <i class="ti ti-edit"></i>
-                                                                    </a>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Description</label>
+                                                        <input type="text"
+                                                            name="description"
+                                                            class="form-control"
+                                                            placeholder="Enter description"
+                                                            value="{{ old('description', $transaction['description'] ?? '') }}">
+                                                    </div>
 
-                                                                    <a href="#"
-                                                                    class="btn btn-sm btn-icon btn-outline-danger"
-                                                                    data-bs-toggle="tooltip"
-                                                                    title="Delete">
-                                                                        <i class="ti ti-trash"></i>
-                                                                    </a>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Fees</label>
+                                                        <input type="text"
+                                                            name="fees"
+                                                            class="form-control"
+                                                            placeholder="0.00"
+                                                            value="{{ old('fees', $transaction['fees'] ?? '') }}">
+                                                    </div>
 
-                                                        @empty
-                                                        <tr>
-                                                            <td colspan="7" class="text-center py-4 text-muted">
-                                                                No Transactions Found
-                                                            </td>
-                                                        </tr>
-                                                    @endforelse
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Transaction ID</label>
+                                                        <input type="text"
+                                                            name="transid"
+                                                            class="form-control"
+                                                            placeholder="Enter transaction id"
+                                                            value="{{ old('transid', $transaction['transid'] ?? '') }}">
+                                                    </div>
 
-                                                </tbody>
-                                            </table>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Amount Out</label>
+                                                        <input type="text"
+                                                            name="amountout"
+                                                            class="form-control"
+                                                            placeholder="0.00"
+                                                            value="{{ old('amountout', $transaction['amountout'] ?? '') }}">
+                                                    </div>
 
-                                        </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Invoice ID</label>
+                                                        <input type="text"
+                                                            name="invoiceid"
+                                                            class="form-control"
+                                                            placeholder="Enter invoice id"
+                                                            value="{{ old('invoiceid', $transaction['invoiceid'] ?? '') }}">
+                                                    </div>
 
-                                        <!-- Pager -->
-                                        <div class="card-body d-flex justify-content-between align-items-center">
-                                            <div class="mt-3 d-flex justify-content-end">
-                                                        {{ $transactions->links('pagination::bootstrap-5') }}
-                                            </div>
+                                                    <div class="col-md-6 d-flex align-items-end">
+                                                        <div class="form-check form-switch">
+                                                            <input class="form-check-input"
+                                                                type="checkbox"
+                                                                id="addcredit"
+                                                                name="addcredit"
+                                                                value="1"
+                                                                {{ old('addcredit', $transaction['addcredit'] ?? false) ? 'checked' : '' }}>
+                                                            <label class="form-check-label" for="addcredit">
+                                                                Add to Client's Credit Balance
+                                                            </label>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Payment Method</label>
+                                                        <select name="paymentmethod" class="form-select">
+                                                            <option value="">None</option>
+                                                            @foreach($paymethodMethods as $m)
+                                                                @php
+                                                                    $methodValue = $m['module'] ?? $m['displayname'];
+                                                                    $selectedMethod = old('paymentmethod', $transaction['gateway'] ?? $transaction['paymentmethod'] ?? '');
+                                                                @endphp
+                                                                <option value="{{ $methodValue }}" {{ $selectedMethod == $methodValue ? 'selected' : '' }}>
+                                                                    {{ $m['displayname'] ?? $m['module'] }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+
+                                                </div>
+
+                                                <div class="mt-4 text-end">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="ti ti-device-floppy me-1"></i> Update Transaction
+                                                    </button>
+                                                </div>
+                                            </form>
                                         </div>
                                     </div>
-
-                                    </div>
+                                </div>
                             </div>
                         </div>
 

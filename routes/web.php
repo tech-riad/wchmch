@@ -55,8 +55,11 @@ Route::middleware(['web', 'auth','whmcsAdmin'])->group(function () {
     Route::get('/users/transaction/{clientid}', [ClientController::class, 'transaction'])->name('admin.users.transaction');
     Route::get('/users/add-transaction/{clientid}', [ClientController::class, 'addTransaction'])->name('admin.users.addtransaction');
     Route::post('/users/store-transaction/{clientid}', [ClientController::class, 'storeTransaction'])->name('admin.users.storetransaction');
+    Route::get('/admin/users/{clientid}/transaction/{transactionid}/edit', [ClientController::class, 'editTransaction'])
+    ->name('admin.users.transaction.edit');
 
-
+    Route::put('/admin/users/{clientid}/transaction/{transactionid}/update', [ClientController::class, 'updateTransaction'])
+        ->name('admin.users.transaction.update');
 
     Route::prefix('admin')->group(function () {
     Route::get('/orders/create/{clientId}', [ClientController::class, 'createOrder'])->name('admin.orders.create');
