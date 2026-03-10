@@ -61,6 +61,15 @@ Route::middleware(['web', 'auth','whmcsAdmin'])->group(function () {
     Route::put('/admin/users/{clientid}/transaction/{transactionid}/update', [ClientController::class, 'updateTransaction'])
         ->name('admin.users.transaction.update');
 
+
+    // Billable Items
+    Route::get('/users/billabeitem/{clientid}', [ClientController::class, 'billableitem'])->name('admin.users.billableitem');
+    Route::get('/users/add/billabeitem/{clientid}', [ClientController::class, 'addBillableitem'])->name('admin.users.add.billableitem');
+    Route::post('/admin/users/{clientid}/billable-items/store', [ClientController::class, 'storeBillableItem'])
+    ->name('admin.users.billableitems.store');
+
+
+
     Route::prefix('admin')->group(function () {
     Route::get('/orders/create/{clientId}', [ClientController::class, 'createOrder'])->name('admin.orders.create');
     Route::post('/orders/store', [ClientController::class, 'storeOrder'])->name('admin.orders.store');

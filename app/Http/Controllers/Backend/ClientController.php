@@ -12,6 +12,141 @@ use Illuminate\Support\Str;
 
 class ClientController extends Controller
 {
+    public function storeBillableItem(Request $request, WhmcsService $whmcs, $clientid)
+    {
+        $request->merge([
+            'description'   => $request->description ? trim($request->description) : null,
+            'hours'         => $request->hours !== null ? trim($request->hours) : '0',
+            'amount'        => $request->amount !== null ? trim($request->amount) : '0.00',
+            'invoiceaction' => $request->invoiceaction !== null ? trim($request->invoiceaction) : 'noinvoice',
+            'recur'         => $request->recur !== null ? trim($request->recur) : '0',
+            'recurcycle'    => $request->recurcycle ? trim($request->recurcycle) : null,
+            'recurfor'      => $request->recurfor !== null ? trim($request->recurfor) : null,
+            'duedate'       => $request->duedate ? trim($request->duedate) : null,
+            'invoicecount'  => $request->invoicecount !== null ? trim($request->invoicecount) : '0',
+            'unit'          => $request->unit !== null ? trim($request->unit) : 'hours',
+        ]);
+
+        $request->validate([
+            'description'   => ['required', 'string', 'max:255'],
+            'hours'         => ['required', 'numeric', 'min:0'],
+            'amount'        => ['required', 'numeric', 'min:0'],
+            'unit'          => ['required', 'in:hours,quantity'],
+            'invoiceaction' => ['required', 'in:noinvoice,nextcron,nextinvoice,duedate,recur'],
+            'duedate'       => ['nullable', 'date_format:d/m/Y'],
+            'invoicecount'  => ['nullable', 'integer', 'min:0'],
+            'recur'         => ['nullable', 'integer', 'min:0'],
+            'recurcycle'    => ['nullable', 'in:Days,Weeks,Months,Years'],
+            'recurfor'      => ['nullable', 'integer', 'min:0'],
+        ], [
+            'description.required'   => 'Description is required.',
+            'hours.required'         => 'Hours/Qty is required.',
+            'hours.numeric'          => 'Hours/Qty must be a valid number.',
+            'amount.required'        => 'Amount is required.',
+            'amount.numeric'         => 'Amount must be a valid number.',
+            'unit.in'                => 'Invalid unit selected.',
+            'invoiceaction.in'       => 'Invalid invoice action selected.',
+            'duedate.date_format'    => 'Due Date must be in dd/mm/yyyy format.',
+            'invoicecount.integer'   => 'Invoice Count must be a valid number.',
+            'recur.integer'          => 'Recurring interval must be a valid number.',
+            'recurcycle.in'          => 'Invalid recurring cycle selected.',
+            'recurfor.integer'       => 'Recurring times must be a valid number.',
+        ]);
+
+        // Recur হলে extra validation
+        if ($request->invoiceaction === 'recur') {
+            if ((int) $request->recur <= 0) {
+                return redirect()->back()
+                    ->withErrors(['recur' => 'Recurring interval must be greater than 0.'])
+                    ->withInput();
+            }
+
+            if (empty($request->recurcycle)) {
+                return redirect()->back()
+                    ->withErrors(['recurcycle' => 'Recurring cycle is required.'])
+                    ->withInput();
+            }
+
+            if ($request->recurfor !== null && $request->recurfor !== '' && (int) $request->recurfor <= 0) {
+                return redirect()->back()
+                    ->withErrors(['recurfor' => 'Recurring times must be greater than 0.'])
+                    ->withInput();
+            }
+        }
+
+        // Due date দরকার হলে
+        if (in_array($request->invoiceaction, ['duedate', 'recur'], true) && empty($request->duedate)) {
+            return redirect()->back()
+                ->withErrors(['duedate' => 'Due Date is required for this invoice action.'])
+                ->withInput();
+        }
+
+        $postData = array_filter([
+            'clientid'      => $clientid,
+            'description'   => $request->description,
+            'hours'         => $request->hours,
+            'amount'        => $request->amount,
+            'invoiceaction' => $request->invoiceaction,
+            'duedate'       => $request->duedate,
+            'invoicecount'  => $request->invoicecount,
+            'recur'         => $request->recur,
+            'recurcycle'    => $request->recurcycle,
+            'recurfor'      => $request->recurfor,
+            'unit'          => $request->unit, // hours or quantity
+        ], function ($value) {
+            return $value !== null && $value !== '';
+        });
+
+        $response = $whmcs->call('AddBillableItem', $postData);
+
+        if (($response['result'] ?? '') !== 'success') {
+            return redirect()->back()
+                ->withErrors([
+                    'api' => $response['message'] ?? 'Failed to add billable item.'
+                ])
+                ->withInput();
+        }
+
+        return redirect()
+            ->route('admin.users.billableitem', ['clientid' => $clientid])
+            ->with('success', 'Billable item added successfully.');
+    }
+    public function addBillableitem(WhmcsService $whmcs, $clientid)
+    {
+
+    // dd($clientid);
+        $resp = $whmcs->call('GetClientsDetails', [
+            'clientid' => $clientid,
+        ]);
+
+        // dd($transactiondata);
+        $paymethodMethods = $whmcs->call('GetPaymentMethods');
+
+        $paymentMethods = $paymethodMethods['paymentmethods']['paymentmethod'] ?? [];
+
+
+        return view('backend.client.billableitem.add', [
+            'client' => $resp['client'] ?? [],
+        ]);
+    }
+    public function billableitem(WhmcsService $whmcs, $clientid)
+    {
+
+        $resp = $whmcs->call('GetClientsDetails', [
+            'clientid' => $clientid,
+        ]);
+
+        // dd($transactiondata);
+        $paymethodMethods = $whmcs->call('GetPaymentMethods');
+
+        $paymentMethods = $paymethodMethods['paymentmethods']['paymentmethod'] ?? [];
+
+        // dd($resp);
+
+        return view('backend.client.billableitem.index', [
+            'client' => $resp['client'] ?? [],
+        ]);
+    }
 
     public function updateTransaction(Request $request, WhmcsService $whmcs, $clientid, $transactionid)
     {
@@ -167,6 +302,7 @@ class ClientController extends Controller
             'paymethodMethods' => $paymentMethods,
         ]);
     }
+
 
     public function addTransaction(Request $request, WhmcsService $whmcs, $clientid)
     {

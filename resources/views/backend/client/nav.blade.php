@@ -29,6 +29,14 @@
                             class="icon-base ti tabler-link icon-sm me-1_5"></i>Invoices</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.users.invoices') ? 'active' : '' }}" href="{{ route('admin.users.invoices', ['clientid' => $client['id']]) }}"><i
+                            class="icon-base ti tabler-link icon-sm me-1_5"></i>Domain</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.users.billableitem') || request()->routeIs('admin.users.add.billableitem') ? 'active' : '' }}" href="{{ route('admin.users.billableitem', ['clientid' => $client['id']]) }}"><i
+                            class="icon-base ti tabler-link icon-sm me-1_5"></i>Billable Items</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('admin.users.transaction') || request()->routeIs('admin.users.addtransaction') || request()->routeIs('admin.users.transaction.edit') || request()->routeIs('admin.users.transaction.update')  ? 'active' : '' }}" href="{{ route('admin.users.transaction', ['clientid' => $client['id']]) }}"><i
                             class="icon-base ti tabler-link icon-sm me-1_5"></i>Transactions</a>
                 </li>
