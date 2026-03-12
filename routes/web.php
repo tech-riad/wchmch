@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Backend\ClientController;
 use App\Http\Controllers\Backend\InvoiceDetailsController;
+use App\Http\Controllers\Backend\ManageUsersController;
 use App\Http\Controllers\WHMCSController;
 use Illuminate\Support\Facades\Route;
 
@@ -70,6 +71,11 @@ Route::middleware(['web', 'auth','whmcsAdmin'])->group(function () {
 
     // Domain
     Route::get('/users/domains/{clientid}', [ClientController::class, 'domains'])->name('admin.users.domains');
+
+
+    // Manage Users
+    Route::get('/admin/users/list', [ManageUsersController::class, 'userList'])->name('admin.users.list');
+
 
 
 
