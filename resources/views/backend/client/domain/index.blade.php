@@ -609,7 +609,8 @@
                                             <p class="text-muted mb-3">
                                                 This client does not currently have any domains.
                                             </p>
-                                            <a href="{{ url('ordersadd.php?userid=' . ($client['id'] ?? '')) }}" class="btn btn-primary">
+                                            
+                                            <a href="{{ route('admin.orders.create',$client['id']) }}" class="btn btn-primary">
                                                 Place New Order
                                             </a>
                                         </div>
