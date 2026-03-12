@@ -70,8 +70,11 @@ Route::middleware(['web', 'auth','whmcsAdmin'])->group(function () {
     ->name('admin.users.billableitems.store');
 
     // Domain
-    Route::get('/users/domains/{clientid}', [ClientController::class, 'domains'])->name('admin.users.domains');
+    Route::get('/admin/users/{clientid}/domains', [ClientController::class, 'domains'])
+        ->name('admin.users.domains');
 
+    Route::post('/admin/users/{clientid}/domains/{domainid}/update', [ClientController::class, 'updateDomain'])
+        ->name('admin.users.domains.update');
 
     // Manage Users
     Route::get('/admin/users/list', [ManageUsersController::class, 'userList'])->name('admin.users.list');

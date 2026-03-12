@@ -12,23 +12,141 @@ use Illuminate\Support\Str;
 
 class ClientController extends Controller
 {
-    public function domains(WhmcsService $whmcs, $clientid)
+    public function updateDomain(Request $request, WhmcsService $whmcs, $clientid, $domainid)
     {
+        $request->merge([
+            'domain' => $request->domain ? trim($request->domain) : null,
+            'registrar' => $request->registrar ? trim($request->registrar) : null,
+            'paymentmethod' => $request->paymentmethod ? trim($request->paymentmethod) : null,
+            'status' => $request->status ? trim($request->status) : null,
+            'subscriptionid' => $request->subscriptionid ? trim($request->subscriptionid) : null,
+            'regperiod' => $request->regperiod ? trim($request->regperiod) : null,
+            'regdate' => $request->regdate ? trim($request->regdate) : null,
+            'expirydate' => $request->expirydate ? trim($request->expirydate) : null,
+            'nextduedate' => $request->nextduedate ? trim($request->nextduedate) : null,
+            'firstpaymentamount' => $request->firstpaymentamount ? trim($request->firstpaymentamount) : null,
+            'recurringamount' => $request->recurringamount ? trim($request->recurringamount) : null,
+            'promoid' => $request->promoid ? trim($request->promoid) : '0',
+            'additionalnotes' => $request->additionalnotes ? trim($request->additionalnotes) : null,
+        ]);
 
+        $request->validate([
+            'domain' => ['required', 'string', 'max:255'],
+            'status' => ['required', 'string'],
+            'paymentmethod' => ['nullable', 'string'],
+            'regperiod' => ['nullable', 'integer', 'min:1'],
+            'regdate' => ['nullable', 'date_format:d/m/Y'],
+            'expirydate' => ['nullable'],
+            'nextduedate' => ['nullable', 'date_format:d/m/Y'],
+            'firstpaymentamount' => ['nullable', 'numeric', 'min:0'],
+            'recurringamount' => ['nullable', 'numeric', 'min:0'],
+            'promoid' => ['nullable'],
+        ]);
 
-        $resp = $whmcs->call('GetClientsDetails', [
+        $postData = array_filter([
+            'domainid' => $domainid,
+            'dnsmanagement' => $request->has('dnsmanagement') ? 1 : 0,
+            'emailforwarding' => $request->has('emailforwarding') ? 1 : 0,
+            'idprotection' => $request->has('idprotection') ? 1 : 0,
+            'donotrenew' => $request->has('donotrenew') ? 1 : 0,
+            'promoid' => $request->promoid ?? 0,
+
+            // extra fields you may still want to send depending on your wrapper/WHMCS version
+            'domain' => $request->domain,
+            'registrar' => $request->registrar,
+            'status' => $request->status,
+            'paymentmethod' => $request->paymentmethod,
+            'regperiod' => $request->regperiod,
+            'regdate' => $request->regdate,
+            'expirydate' => $request->expirydate,
+            'nextduedate' => $request->nextduedate,
+            'firstpaymentamount' => $request->firstpaymentamount,
+            'recurringamount' => $request->recurringamount,
+            'subscriptionid' => $request->subscriptionid,
+            'notes' => $request->additionalnotes,
+        ], function ($value) {
+            return $value !== null && $value !== '';
+        });
+
+        $resp = $whmcs->call('UpdateClientDomain', $postData);
+
+        if (($resp['result'] ?? '') !== 'success') {
+            return back()->withErrors([
+                'api' => $resp['message'] ?? 'Failed to update domain.'
+            ])->withInput();
+        }
+
+        return redirect()
+            ->route('admin.users.domains', ['clientid' => $clientid, 'id' => $domainid])
+            ->with('success', 'Domain updated successfully.');
+    }
+    public function domains(Request $request, WhmcsService $whmcs, $clientid)
+    {
+        $clientResp = $whmcs->call('GetClientsDetails', [
             'clientid' => $clientid,
         ]);
 
-        // dd($transactiondata);
-        $paymethodMethods = $whmcs->call('GetPaymentMethods');
+        $domainsResp = $whmcs->call('GetClientsDomains', [
+            'clientid' => $clientid,
+        ]);
 
-        $paymentMethods = $paymethodMethods['paymentmethods']['paymentmethod'] ?? [];
+        $paymentMethodsResp = $whmcs->call('GetPaymentMethods');
 
-        // dd($resp);
+        $ordersResp = $whmcs->call('GetOrders', [
+            'userid' => $clientid,
+        ]);
+
+        $client = $clientResp['client'] ?? [];
+
+        $domains = $domainsResp['domains']['domain'] ?? [];
+        if (!empty($domains) && isset($domains['id'])) {
+            $domains = [$domains];
+        }
+
+        $domains = collect($domains)->sortByDesc('id')->values();
+
+        if ($domains->isEmpty()) {
+            return view('backend.client.domain.index', [
+                'client' => $client,
+                'domains' => collect(),
+                'domain' => null,
+                'paymentMethods' => [],
+                'selectedOrder' => null,
+            ]);
+        }
+
+        $selectedDomainId = $request->get('id');
+        if (!$selectedDomainId) {
+            $selectedDomainId = $domains->first()['id'];
+        }
+
+        $domain = $domains->firstWhere('id', (string) $selectedDomainId);
+        if (!$domain) {
+            $domain = $domains->first();
+        }
+
+        $paymentMethods = $paymentMethodsResp['paymentmethods']['paymentmethod'] ?? [];
+        if (!empty($paymentMethods) && isset($paymentMethods['module'])) {
+            $paymentMethods = [$paymentMethods];
+        }
+
+        $orders = $ordersResp['orders']['order'] ?? [];
+        if (!empty($orders) && isset($orders['id'])) {
+            $orders = [$orders];
+        }
+        $orders = collect($orders);
+
+        $selectedOrder = null;
+        if (!empty($domain['orderid'])) {
+            $selectedOrder = $orders->firstWhere('id', $domain['orderid']);
+        }
 
         return view('backend.client.domain.index', [
-            'client' => $resp['client'] ?? [],
+            'client' => $client,
+            'domains' => $domains,
+            'domain' => $domain,
+            'paymentMethods' => $paymentMethods,
+            'selectedOrder' => $selectedOrder,
         ]);
     }
     public function storeBillableItem(Request $request, WhmcsService $whmcs, $clientid)
