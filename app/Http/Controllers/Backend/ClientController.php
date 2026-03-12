@@ -12,6 +12,25 @@ use Illuminate\Support\Str;
 
 class ClientController extends Controller
 {
+    public function domains(WhmcsService $whmcs, $clientid)
+    {
+
+
+        $resp = $whmcs->call('GetClientsDetails', [
+            'clientid' => $clientid,
+        ]);
+
+        // dd($transactiondata);
+        $paymethodMethods = $whmcs->call('GetPaymentMethods');
+
+        $paymentMethods = $paymethodMethods['paymentmethods']['paymentmethod'] ?? [];
+
+        // dd($resp);
+
+        return view('backend.client.domain.index', [
+            'client' => $resp['client'] ?? [],
+        ]);
+    }
     public function storeBillableItem(Request $request, WhmcsService $whmcs, $clientid)
     {
         $request->merge([
@@ -114,7 +133,7 @@ class ClientController extends Controller
     public function addBillableitem(WhmcsService $whmcs, $clientid)
     {
 
-    // dd($clientid);
+            // dd($clientid);
         $resp = $whmcs->call('GetClientsDetails', [
             'clientid' => $clientid,
         ]);
@@ -131,6 +150,7 @@ class ClientController extends Controller
     }
     public function billableitem(WhmcsService $whmcs, $clientid)
     {
+
 
         $resp = $whmcs->call('GetClientsDetails', [
             'clientid' => $clientid,

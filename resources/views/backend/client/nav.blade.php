@@ -29,7 +29,7 @@
                             class="icon-base ti tabler-link icon-sm me-1_5"></i>Invoices</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.users.invoices') ? 'active' : '' }}" href="{{ route('admin.users.invoices', ['clientid' => $client['id']]) }}"><i
+                    <a class="nav-link {{ request()->routeIs('admin.users.domains') ? 'active' : '' }}" href="{{ route('admin.users.domains', ['clientid' => $client['id']]) }}"><i
                             class="icon-base ti tabler-link icon-sm me-1_5"></i>Domain</a>
                 </li>
                 <li class="nav-item">

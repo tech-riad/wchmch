@@ -68,6 +68,10 @@ Route::middleware(['web', 'auth','whmcsAdmin'])->group(function () {
     Route::post('/admin/users/{clientid}/billable-items/store', [ClientController::class, 'storeBillableItem'])
     ->name('admin.users.billableitems.store');
 
+    // Domain
+    Route::get('/users/domains/{clientid}', [ClientController::class, 'domains'])->name('admin.users.domains');
+
+
 
 
     Route::prefix('admin')->group(function () {
