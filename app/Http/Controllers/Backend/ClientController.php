@@ -775,6 +775,8 @@ class ClientController extends Controller
     {
         $clientId = $request->input('client_id');
 
+        // dd($clientId);
+
         if (!$clientId) {
             return response()->json(['error' => 'Client ID is required'], 400);
         }

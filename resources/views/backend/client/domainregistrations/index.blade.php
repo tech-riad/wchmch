@@ -506,7 +506,6 @@
     <!-- Content wrapper -->
     <div class="content-wrapper">
         <!-- Content -->
-        @extends('backend.layouts.app')
 
         <div class="container-xxl flex-grow-1 container-p-y">
 
@@ -518,65 +517,96 @@
                 </div>
             </div>
 
-            <!-- Search / Filter Card -->
-            <div class="card mb-4">
-                <div class="card-header border-bottom">
-                    <h5 class="card-title mb-0">Search / Filter</h5>
-                </div>
-                <div class="card-body">
-                    <form action="/admin/index.php?rp=/admin/domains" method="post">
-                        <input type="hidden" name="token" value="e586174072a6d9de2d53944dd45da0f931a4c443">
+            <div class="d-flex justify-content-between align-items-center mb-3">
 
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Domain</label>
-                                <input type="text" name="domain" class="form-control" value=""
-                                    placeholder="Enter domain name">
-                            </div>
+                <h4 class="mb-0">Domain Registrations</h4>
 
-                            <div class="col-md-6">
-                                <label class="form-label">Status</label>
-                                <select name="status" class="form-select">
-                                    <option value="">Any</option>
-                                    <option value="Pending">Pending</option>
-                                    <option value="Pending Registration">Pending Registration</option>
-                                    <option value="Pending Transfer">Pending Transfer</option>
-                                    <option value="Active">Active</option>
-                                    <option value="Grace">Grace Period (Expired)</option>
-                                    <option value="Redemption">Redemption Period (Expired)</option>
-                                    <option value="Expired">Expired</option>
-                                    <option value="Transferred Away">Transferred Away</option>
-                                    <option value="Cancelled">Cancelled</option>
-                                    <option value="Fraud">Fraud</option>
-                                </select>
-                            </div>
+                <button class="btn btn-outline-primary"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#domainSearchFilter"
+                    aria-expanded="false">
 
-                            <div class="col-md-6">
-                                <label class="form-label">Registrar</label>
-                                <select id="registrarsDropDown" name="registrar" class="form-select">
-                                    <option value="">Any</option>
-                                    <option value="none">None</option>
-                                </select>
-                            </div>
+                    <i class="ti ti-search me-1"></i> Search / Filter
 
-                            <div class="col-md-6">
-                                <label class="form-label">Client Name</label>
-                                <input type="text" name="clientname" class="form-control" value=""
-                                    placeholder="Enter client name">
-                            </div>
-                        </div>
+                </button>
 
-                        <div class="mt-4">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="ti ti-search me-1"></i> Search
-                            </button>
-                        </div>
-                    </form>
-                </div>
             </div>
 
+            <div class="collapse mb-4" id="domainSearchFilter">
+
+                <div class="card">
+
+                    <div class="card-header border-bottom">
+                        <h5 class="card-title mb-0">Search / Filter</h5>
+                    </div>
+
+                    <div class="card-body">
+
+                        <form action="/admin/index.php?rp=/admin/domains" method="post">
+
+                            <input type="hidden" name="token" value="e586174072a6d9de2d53944dd45da0f931a4c443">
+
+                            <div class="row g-3">
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Domain</label>
+                                    <input type="text" name="domain" class="form-control" placeholder="Enter domain name">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Status</label>
+                                    <select name="status" class="form-select">
+                                        <option value="">Any</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="Pending Registration">Pending Registration</option>
+                                        <option value="Pending Transfer">Pending Transfer</option>
+                                        <option value="Active">Active</option>
+                                        <option value="Grace">Grace Period (Expired)</option>
+                                        <option value="Redemption">Redemption Period (Expired)</option>
+                                        <option value="Expired">Expired</option>
+                                        <option value="Transferred Away">Transferred Away</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                        <option value="Fraud">Fraud</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Registrar</label>
+                                    <select name="registrar" class="form-select">
+                                        <option value="">Any</option>
+                                        <option value="none">None</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Client Name</label>
+                                    <input type="text" name="clientname" class="form-control"
+                                        placeholder="Enter client name">
+                                </div>
+
+                            </div>
+
+                            <div class="mt-4">
+
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ti ti-search me-1"></i> Search
+                                </button>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Search / Filter Card -->
+
             <!-- Records Info -->
-            <div class="card mb-4">
+            {{-- <div class="card mb-4">
                 <div class="card-body">
                     <form id="frmRecordsFound" method="post" action="/admin/index.php?rp=/admin/domains&filter=1">
                         <input type="hidden" name="token" value="e586174072a6d9de2d53944dd45da0f931a4c443">
@@ -607,7 +637,7 @@
                         </div>
                     </form>
                 </div>
-            </div>
+            </div> --}}
 
             <!-- Domains Table -->
             <div class="card">
@@ -615,131 +645,210 @@
                     <h5 class="card-title mb-0">Domain List</h5>
                 </div>
 
-                <form method="post" action="/admin/sendmessage.php?type=domain&multiple=true&filter=1">
-                    <input type="hidden" name="token" value="e586174072a6d9de2d53944dd45da0f931a4c443">
+                <div class="table-responsive text-nowrap">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="20">
+                                    <input type="checkbox" class="form-check-input" id="checkall0">
+                                </th>
+                                <th>ID</th>
+                                <th>Domain</th>
+                                <th>Client Name</th>
+                                <th>Reg Period</th>
+                                <th>Registrar</th>
+                                <th>Price</th>
+                                <th>Next Due Date</th>
+                                <th>Expiry Date</th>
+                                <th>Status</th>
+                                <th width="60">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($mainDomains as $item)
+                                @php
+                                    $detailId = 'domain-detail-' . $item['id'];
 
-                    <div class="table-responsive text-nowrap">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th width="20">
-                                        <input type="checkbox" id="checkall0" class="form-check-input">
-                                    </th>
-                                    <th>Domain</th>
-                                    <th>Client Name</th>
-                                    <th>Reg Period</th>
-                                    <th>Registrar</th>
-                                    <th>Price</th>
-                                    <th>Next Due Date</th>
-                                    <th>Expiry Date</th>
-                                    <th>Status</th>
-                                    <th width="20">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                               @forelse ($mainDomains as $item)
-                                <tr>
+                                    $statusClass = match(strtolower($item['status'])) {
+                                        'active' => 'success',
+                                        'pending' => 'warning',
+                                        'expired' => 'danger',
+                                        'cancelled' => 'secondary',
+                                        'fraud' => 'dark',
+                                        default => 'primary'
+                                    };
+                                @endphp
 
+                                {{-- Main Row --}}
+                                <tr class="domain-main-row" data-target="{{ $detailId }}">
                                     <td>
-                                        <input type="checkbox" name="selectedclients[]" value="{{ $item['id'] }}" class="form-check-input">
+                                        <input type="checkbox" name="selectedclients[]" value="{{ $item['id'] }}" class="form-check-input row-check">
                                     </td>
+
                                     <td>
-                                        <a href="/admin/clientsdomains.php?userid={{ $item['userid'] }}&id={{ $item['id'] }}" class="text-primary">
+                                        <a href="{{ route('admin.domain.details', ['clientid' => $item['userid'], 'domainid' => $item['id']]) }}"
+                                        class="fw-medium">
+                                            {{ $item['id'] }}
+                                        </a>
+                                    </td>
+
+                                    <td>
+                                        <a href="{{ route('admin.users.domains', ['clientid' => $item['userid']]) }}" class="text-primary">
                                             {{ $item['domainname'] }}
                                         </a>
                                     </td>
 
                                     <td>
-                                        <a href="/admin/clientssummary.php?userid={{ $item['userid'] }}">
+                                        <a href="{{route('admin.users.details', ['client_id' => $item['id']])}}">
                                             {{ $item['client'] ['fullname']  }}
                                         </a>
                                     </td>
 
-                                    <td>
-                                        {{ $item['regperiod'] }} Year
-                                    </td>
+                                    <td>{{ $item['regperiod'] ?? 0 }} Year</td>
+
+                                    <td>{{ $item['registrar'] ?: '-' }}</td>
+
+                                    <td>${{ number_format((float)($item['recurringamount'] ?? 0), 2) }} USD</td>
 
                                     <td>
-                                        {{ $item['registrar'] ?: '-' }}
-                                    </td>
-
-                                    <td>
-                                        ${{ $item['recurringamount'] }} USD
-                                    </td>
-
-                                    <td>
-                                        {{ \Carbon\Carbon::parse($item['nextduedate'])->format('d/m/Y') }}
-                                    </td>
-
-                                    <td>
-                                        @if($item['expirydate'] == '0000-00-00')
+                                        @if(!empty($item['nextduedate']) && $item['nextduedate'] !== '0000-00-00')
+                                            {{ \Carbon\Carbon::parse($item['nextduedate'])->format('d/m/Y') }}
+                                        @else
                                             -
-                                        @else
+                                        @endif
+                                    </td>
+
+                                    <td>
+                                        @if(!empty($item['expirydate']) && $item['expirydate'] !== '0000-00-00')
                                             {{ \Carbon\Carbon::parse($item['expirydate'])->format('d/m/Y') }}
-                                        @endif
-                                    </td>
-
-                                    <td>
-                                        @if($item['status'] == 'Active')
-                                            <span class="badge bg-label-success">Active</span>
-                                        @elseif($item['status'] == 'Pending')
-                                            <span class="badge bg-label-warning">Pending</span>
-                                        @elseif($item['status'] == 'Expired')
-                                            <span class="badge bg-label-danger">Expired</span>
                                         @else
-                                            <span class="badge bg-label-secondary">{{ $item['status'] }}</span>
+                                            -
                                         @endif
                                     </td>
 
                                     <td>
-                                        <a href="/admin/index.php?rp=/admin/domains/detail/{{ $item['id'] }}"
-                                        class="btn btn-sm btn-icon btn-text-secondary">
-                                            <i class="ti ti-eye"></i>
-                                        </a>
+                                        <span class="badge bg-label-{{ $statusClass }} domain-status-toggle cursor-pointer"
+                                            data-target="{{ $detailId }}"
+                                            style="cursor:pointer;">
+                                            {{ $item['status'] }}
+                                        </span>
                                     </td>
 
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-icon btn-text-secondary toggle-detail-btn" data-bs-toggle="modal" data-bs-target="#domain_details_{{ $detailId }}">
+                                             <i class="ti ti-plus"></i>
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-sm btn-icon btn-text-secondary toggle-detail-btn"
+                                                data-target="{{ $detailId }}">
+
+                                        </button>
+                                    </td>
                                 </tr>
 
-                                @empty
+                                <div class="modal fade" id="domain_details_{{ $detailId }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl">
+                                        <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="domain_details_{{ $detailId }}Label">{{ $item['domainname'] }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="p-3">
+                                                <div class="row g-3">
+                                                    <div class="col-md-4">
+                                                        <div class="border rounded p-3 h-100">
+                                                            <h6 class="mb-2">Order Information</h6>
+                                                            <div class="small">
+                                                                <div class="mb-1">
+                                                                    <strong>Order #:</strong>
+                                                                    {{ $item['order'] ['ordernum'] ?? '-' }}
+                                                                </div>
+                                                                <div class="mb-1">
+                                                                    <strong>Registration Date:</strong>
+                                                                    @if(!empty($item['regdate']) && $item['regdate'] !== '0000-00-00')
+                                                                        {{ \Carbon\Carbon::parse($item['regdate'])->format('d/m/Y') }}
+                                                                    @else
+                                                                        -
+                                                                    @endif
+                                                                </div>
+                                                                <div>
+                                                                    <strong>Order Type:</strong>
+                                                                    {{ $item['regtype'] ?? '-' }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
 
+                                                    <div class="col-md-4">
+                                                        <div class="border rounded p-3 h-100">
+                                                            <h6 class="mb-2">Domain Features</h6>
+                                                            <div class="small">
+                                                                <div class="mb-1">
+                                                                    <strong>DNS Management:</strong>
+                                                                    {{ !empty($item['dnsmanagement']) ? 'Yes' : 'No' }}
+                                                                </div>
+                                                                <div class="mb-1">
+                                                                    <strong>Email Forwarding:</strong>
+                                                                    {{ !empty($item['emailforwarding']) ? 'Yes' : 'No' }}
+                                                                </div>
+                                                                <div class="mb-1">
+                                                                    <strong>ID Protection:</strong>
+                                                                    {{ !empty($item['idprotection']) ? 'Yes' : 'No' }}
+                                                                </div>
+                                                                <div>
+                                                                    <strong>Auto Renew:</strong>
+                                                                    {{ !empty($item['donotrenew']) ? 'No' : 'Yes' }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-4">
+                                                        <div class="border rounded p-3 h-100">
+                                                            <h6 class="mb-2">Billing</h6>
+                                                            <div class="small">
+                                                                <div class="mb-1">
+                                                                    <strong>Payment Method:</strong>
+                                                                    {{ $item['paymentmethodname'] ?? ($item['paymentmethod'] ?? '-') }}
+                                                                </div>
+                                                                <div class="mb-1">
+                                                                    <strong>First Payment:</strong>
+                                                                    ${{ number_format((float)($item['firstpaymentamount'] ?? 0), 2) }} USD
+                                                                </div>
+                                                                <div class="mb-1">
+                                                                    <strong>Recurring Amount:</strong>
+                                                                    ${{ number_format((float)($item['recurringamount'] ?? 0), 2) }} USD
+                                                                </div>
+                                                                <div>
+                                                                    <strong>Notes:</strong>
+                                                                    {{ $item['notes'] ?: '-' }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <button type="button" class="btn btn-primary">Understood</button>
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                            @empty
                                 <tr>
                                     <td colspan="11" class="text-center text-muted py-4">
                                         No Records Found
                                     </td>
                                 </tr>
-
-                                @endforelse
-
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Bottom Actions -->
-                    <div class="card-body border-top">
-                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                            <div>
-                                With Selected:
-                                <button type="submit" class="btn btn-outline-primary btn-sm ms-2">
-                                    <i class="ti ti-send me-1"></i> Send Message
-                                </button>
-                            </div>
-
-                            <nav>
-                                <ul class="pagination pagination-sm mb-0">
-                                    <li class="page-item disabled">
-                                        <span class="page-link">« Previous</span>
-                                    </li>
-                                    <li class="page-item active">
-                                        <span class="page-link">1</span>
-                                    </li>
-                                    <li class="page-item disabled">
-                                        <span class="page-link">Next »</span>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
-                    </div>
-                </form>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -782,3 +891,64 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    function toggleDetailRow(targetId) {
+        const detailRow = document.getElementById(targetId);
+        if (!detailRow) return;
+
+        const mainRow = document.querySelector(`tr.domain-main-row[data-target="${targetId}"]`);
+        const button = document.querySelector(`.toggle-detail-btn[data-target="${targetId}"] i`);
+
+        const isHidden = detailRow.classList.contains('d-none');
+
+        if (isHidden) {
+            detailRow.classList.remove('d-none');
+            if (button) {
+                button.classList.remove('ti-plus');
+                button.classList.add('ti-minus');
+            }
+            if (mainRow) {
+                mainRow.classList.add('table-active');
+            }
+        } else {
+            detailRow.classList.add('d-none');
+            if (button) {
+                button.classList.remove('ti-minus');
+                button.classList.add('ti-plus');
+            }
+            if (mainRow) {
+                mainRow.classList.remove('table-active');
+            }
+        }
+    }
+
+    document.querySelectorAll('.toggle-detail-btn').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleDetailRow(this.dataset.target);
+        });
+    });
+
+    document.querySelectorAll('.domain-status-toggle').forEach(status => {
+        status.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleDetailRow(this.dataset.target);
+        });
+    });
+
+    document.getElementById('checkall0')?.addEventListener('change', function () {
+        document.querySelectorAll('.row-check').forEach(item => {
+            item.checked = this.checked;
+        });
+    });
+
+});
+</script>
+
+@endpush
