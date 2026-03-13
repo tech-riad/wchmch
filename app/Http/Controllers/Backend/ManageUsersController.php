@@ -11,7 +11,7 @@ class ManageUsersController extends Controller
     public function userList(WhmcsService $whmcs)
     {
 
-        $resp = $whmcs->call('GetAdminUsers', [
+        $resp = $whmcs->call('GetUsers', [
             'limitstart' => 0,
             'limitnum'   => 50,
         ]);

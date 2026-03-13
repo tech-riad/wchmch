@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Backend\ClientController;
+use App\Http\Controllers\Backend\DomainRegistrationCOntroller;
 use App\Http\Controllers\Backend\InvoiceDetailsController;
 use App\Http\Controllers\Backend\ManageUsersController;
 use App\Http\Controllers\WHMCSController;
@@ -79,6 +80,9 @@ Route::middleware(['web', 'auth','whmcsAdmin'])->group(function () {
     // Manage Users
     Route::get('/admin/users/list', [ManageUsersController::class, 'userList'])->name('admin.users.list');
 
+
+    // Domain Registrations
+    Route::get('/admin/client/domain-registration', [DomainRegistrationCOntroller::class, 'domainRegistration'])->name('admin.domain.registration');
 
 
 

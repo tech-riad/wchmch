@@ -315,7 +315,7 @@
                 </li>
             </ul>
         </li>
-        <li class="menu-item {{ Request::is('users') || Request::is('users/create') || Request::is('admin/users/list') ? 'open' : '' }}">
+        <li class="menu-item {{ Request::is('users') || Request::is('users/create') || Request::is('admin/users/list') || Request::is('admin/client/domain-registration') ? 'open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle ">
                 <i class="menu-icon icon-base ti tabler-users"></i>
                 <div data-i18n="Users">Client</div>
@@ -335,6 +335,11 @@
             <li class="menu-item {{ Request::is('admin/users/list') ? 'active' : '' }}">
                 <a href="{{ route('admin.users.list') }}" class="menu-link">
                     <div data-i18n="Manage Users">Manage Users</div>
+                </a>
+            </li>
+            <li class="menu-item {{ Request::is('admin/client/domain-registration') ? 'active' : '' }}">
+                <a href="{{ route('admin.domain.registration') }}" class="menu-link">
+                    <div data-i18n="Domain Registrations">Domain Registrations</div>
                 </a>
             </li>
         </ul>
