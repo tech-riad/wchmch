@@ -509,13 +509,7 @@
 
         <div class="container-xxl flex-grow-1 container-p-y">
 
-            <!-- Page Title -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h4 class="fw-bold mb-1">Domain Registrations</h4>
-                    <p class="text-muted mb-0">Manage and monitor all registered domains</p>
-                </div>
-            </div>
+
 
             <div class="d-flex justify-content-between align-items-center mb-3">
 
@@ -543,9 +537,9 @@
 
                     <div class="card-body">
 
-                        <form action="/admin/index.php?rp=/admin/domains" method="post">
+                        <form action="{{route('admin.domain.search')}}" method="post">
+                            @csrf
 
-                            <input type="hidden" name="token" value="e586174072a6d9de2d53944dd45da0f931a4c443">
 
                             <div class="row g-3">
 

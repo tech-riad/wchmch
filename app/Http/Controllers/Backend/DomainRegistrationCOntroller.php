@@ -45,4 +45,42 @@ class DomainRegistrationCOntroller extends Controller
         return view('backend.client.domainregistrations.index', compact('mainDomains'));
 
     }
+    public function domainSearch( WhmcsService $whmcs,Request $request)
+    {
+        dd($request->all());
+        dd('here');
+        $resp = $whmcs->call('GetClientsDomains', [
+            'limitstart' => 0,
+            'limitnum'   => 25,
+        ]);
+
+        $domains = $resp['domains']['domain'] ?? [];
+
+        foreach ($domains as $key => $d) {
+
+            // Client Details
+            $userDetails = $whmcs->call('GetClientsDetails', [
+                'clientid' => $d['userid'],
+            ]);
+
+            $domains[$key]['client'] = $userDetails['client'] ?? [];
+
+
+            // Order Details
+            $orderDetails = $whmcs->call('GetOrders', [
+                'id' => $d['orderid'],
+            ]);
+
+            $domains[$key]['order'] = $orderDetails['orders']['order'][0] ?? [];
+        }
+
+        $mainDomains = collect($domains)
+                        ->sortByDesc('id')
+                        ->values();
+
+        // dd($domains);
+
+        return view('backend.client.domainregistrations.index', compact('mainDomains'));
+
+    }
 }

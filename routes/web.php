@@ -83,6 +83,7 @@ Route::middleware(['web', 'auth','whmcsAdmin'])->group(function () {
 
     // Domain Registrations
     Route::get('/admin/client/domain-registration', [DomainRegistrationCOntroller::class, 'domainRegistration'])->name('admin.domain.registration');
+    Route::post('/admin/client/search-domain', [DomainRegistrationCOntroller::class, 'domainSearch'])->name('admin.domain.search');
     Route::any('/admin/client/domain/clientid={clientid}/domainid={domainid}', [DomainRegistrationCOntroller::class, 'domainDetails'])->name('admin.domain.details');
 
 
