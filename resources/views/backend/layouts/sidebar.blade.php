@@ -355,7 +355,7 @@
         </a>
         <ul class="menu-sub">
             <li class="menu-item">
-                <a href="app-access-roles.html" class="menu-link">
+                <a href="{{route('admin.shared.hostings')}}" class="menu-link">
                     <div data-i18n="Roles">Roles</div>
                 </a>
             </li>
